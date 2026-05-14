@@ -8,7 +8,6 @@ import Button from 'primevue/button';
 import Checkbox from 'primevue/checkbox';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
-import { useApp } from '@/Assets/Composables';
 
 defineProps({
     canResetPassword: Boolean,
@@ -16,12 +15,18 @@ defineProps({
 });
 
 const form = useForm({
-    cpf_cnpj: '',
-    email: '',
+    cpf: '',
     password: '',
     remember: false,
 });
-const shared = useApp();
+const formatCPF = (value) => {
+    return value
+        .replace(/\D/g, '') // Remove tudo que não for número
+        .replace(/(\d{3})(\d)/, '$1.$2') // Adiciona o primeiro ponto
+        .replace(/(\d{3})(\d)/, '$1.$2') // Adiciona o segundo ponto
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2'); // Adiciona o traço
+};
+
 const submit = () => {
     form.transform(data => ({
         ...data,
@@ -38,25 +43,17 @@ const submit = () => {
 
     <AuthenticationCard>
         <AuthenticationCardLogo />
-        <div class="text-500 font-medium -mt-4 mb-5 text-center">Autentique-se para continuar</div>
+        <div class="text-500 font-medium -mt-4 mb-5 text-center">Faça login para continuar</div>
 
         <div v-if="status" class="mb-4 font-medium text-sm text-green-600">
             {{ status }}
         </div>
 
         <form @submit.prevent="submit" class="flex flex-col gap-4 w-72 sm:w-96">
-            <div v-if="shared.isHeimdall">
-                <InputLabel for="cpf_cnpj" value="CPF" required />
-                <InputText class="w-full" id="cpf_cnpj" type="cpf_cnpj" v-model="form.cpf_cnpj"
-                    placeholder="Digite seu CPF" />
-                <InputError class="mt-2 text-wrap text-justify" :message="form.errors.cpf_cnpj" />
-            </div>
-            <div v-else>
-                <InputLabel for="email" value="E-mail" required />
-                <InputText class="w-full" id="email" type="email" v-model="form.email"
-                    placeholder="Digite seu e-mail" />
-                <InputError class="mt-2 text-wrap text-justify" :message="form.errors.email" />
-            </div>
+            <InputLabel for="cpf" value="CPF" required />
+            <InputText class="w-full" id="cpf" type="text" v-model="form.cpf"
+                placeholder="Digite seu CPF" autocomplete="username" @input="form.cpf = formatCPF($event.target.value)" />
+            <InputError class="mt-2 text-wrap text-justify" :message="form.errors.cpf" />
 
             <div>
                 <InputLabel for="password" value="Senha" required />

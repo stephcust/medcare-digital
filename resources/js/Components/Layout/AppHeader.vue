@@ -4,7 +4,7 @@ import { useApp } from '@/Assets/Composables';
 import Notifications from '@/Components/Layout/Notifications.vue';
 import { useSidebar } from '@/Components/Layout/Composables';
 import { isMenuActive, recursiveMenuItem } from '@/Components/Layout/Functions';
-import LogoPMMHorizontal from '@/Components/Logos/LogoPMMHorizontal.vue';
+import LogoPMMHorizontal from '@/Components/Logos/LogoHorizontal.vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { PrimeIcons as PI } from '@primevue/core/api';
 import Button from 'primevue/button';

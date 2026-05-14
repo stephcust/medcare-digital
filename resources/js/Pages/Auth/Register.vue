@@ -11,11 +11,20 @@ import Password from 'primevue/password';
 
 const form = useForm({
     name: '',
+    cpf: '',
     email: '',
     password: '',
     password_confirmation: '',
     terms: false,
 });
+
+const formatCPF = (value) => {
+    return value
+        .replace(/\D/g, '') // Remove tudo que não for número
+        .replace(/(\d{3})(\d)/, '$1.$2') // Adiciona o primeiro ponto
+        .replace(/(\d{3})(\d)/, '$1.$2') // Adiciona o segundo ponto
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2'); // Adiciona o traço
+};
 
 const submit = () => {
     form.post(route('register'), {
@@ -44,6 +53,13 @@ const submit = () => {
                 <InputLabel for="email" value="E-mail" required />
                 <InputText id="email" v-model="form.email" class="mt-1 block w-full" required autocomplete="username" />
                 <InputError class="mt-2" :message="form.errors.email" />
+            </div>
+
+            <div class="mt-4">
+                <InputLabel for="cpf" value="CPF" required />
+                <InputText id="cpf" v-model="form.cpf" class="mt-1 block w-full" required autocomplete="cpf" />
+                <!-- <InputText id="cpf" v-model="form.cpf" class="mt-1 block w-full" required autocomplete="cpf" @input="form.cpf = formatCPF($event.target.value)" /> -->
+                <InputError class="mt-2" :message="form.errors.cpf" />
             </div>
 
             <div class="mt-4">

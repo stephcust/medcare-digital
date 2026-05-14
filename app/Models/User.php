@@ -27,7 +27,7 @@ class User extends Authenticatable
     }
 
     protected $fillable = [
-        'cpf_cnpj',
+        'cpf',
         'name',
         'email',
         'password',
@@ -66,10 +66,5 @@ class User extends Authenticatable
     public function notifications()
     {
         return $this->morphMany(Notification::class, 'notifiable')->orderBy('created_at', 'desc');
-    }
-
-    public function tarefas()
-    {
-        return $this->hasMany(Tarefa::class);
     }
 }

@@ -45,7 +45,7 @@ return [
     |
     */
 
-    'username' => env('VITE_USER_CONNECTION', 'mariadb') == 'heimdall' ? 'cpf_cnpj' : 'email',
+    'username' => 'cpf',
 
     'email' => 'email',
 

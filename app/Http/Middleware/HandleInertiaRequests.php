@@ -42,13 +42,13 @@ class HandleInertiaRequests extends Middleware
         $isHeimdall = env('VITE_USER_CONNECTION', 'mariadb') === 'heimdall';
         $isProduction = config('app.env') === 'production' || config('app.env') === 'prod';
         $isDev = !$isProduction;
-        $notifications = Auth::user()->notifications;
+        // $notifications = Auth::user()->notifications;
         $arr = array_merge(parent::share($request), [
             'appName' => config('app.name'),
             'appVersion' => config('app.version'),
             'appEnv' => config('app.env'),
             'useSidebar' => config('app.use_sidebar'),
-            'notifications' => $notifications,
+            // 'notifications' => $notifications,
             'isProduction' => $isProduction,
             'isHeimdall' => $isHeimdall,
             'breadcrumbs' => Breadcrumbs::exists($request->route()->getName()) ? Breadcrumbs::generate($request->route()->getName()) : [],

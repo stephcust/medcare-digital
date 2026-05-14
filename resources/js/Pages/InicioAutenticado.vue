@@ -1,89 +1,78 @@
 <script setup>
-import LogoPMMHorizontalGrande from '@/Components/Logos/LogoPMMHorizontalGrande.vue';
+import LogoHorizontalGrande from '@/Components/Logos/LogoHorizontalGrande.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { Link } from '@inertiajs/vue3';
 </script>
 
 <template>
-    <AppLayout title="Início">
-        <div class="max-w-7xl mx-auto">
-            <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
+    <AppLayout title="Meu MedCare">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
 
-                <div class="p-6 lg:p-8 bg-white border-b border-gray-200">
-                    <div class="flex justify-center">
-                        <LogoPMMHorizontalGrande class="dark" />
-                    </div>
-
-                    <h1 class="mt-8 text-2xl font-medium text-gray-900">
-                        Bem-vindo à sua aplicação Jetstream: Laravel 11 + Vue 3!
-                    </h1>
-
-                    <p class="mt-6 text-gray-500 leading-relaxed">
-                        O Laravel Jetstream fornece um ponto de partida bonito e robusto para a sua próxima aplicação
-                        Laravel. O Laravel foi projetado
-                        para ajudá-lo a construir sua aplicação usando um ambiente de desenvolvimento simples, poderoso
-                        e agradável. Acreditamos
-                        que você deve amar expressar sua criatividade através da programação, então dedicamos tempo para
-                        criar cuidadosamente o ecossistema do Laravel
-                        para ser um sopro de ar fresco. Esperamos que você goste.
-                    </p>
-                </div>
-
-                <div class="bg-gray-200 bg-opacity-25 grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 p-6 lg:p-8">
-                    <div>
-                        <div class="flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                class="w-6 h-6 stroke-gray-400">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-                            </svg>
-                            <h2 class="ms-3 text-xl font-semibold text-gray-900">
-                                <a href="https://laravel.com/docs">Documentação</a>
-                            </h2>
-                        </div>
-
-                        <p class="mt-4 text-gray-500 text-sm leading-relaxed">
-                            O Laravel possui uma documentação que abrange todos os aspectos do framework. Se você é novo
-                            no framework ou tem experiência anterior, recomenda-se ler toda a documentação do início ao
-                            fim.
-                        </p>
-
-                        <p class="mt-4 text-sm">
-                            <a href="https://laravel.com/docs"
-                                class="inline-flex items-center font-semibold text-primary-700 hover:text-primary-800 transition-colors">
-                                Explorar a documentação
-
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                                    class="ms-1 w-5 h-5 fill-primary-700 hover:fill-primary-800 transition-colors">
-                                    <path fill-rule="evenodd"
-                                        d="M5 10a.75.75 0 01.75-.75h6.638L10.23 7.29a.75.75 0 111.04-1.08l3.5 3.25a.75.75 0 010 1.08l-3.5 3.25a.75.75 0 11-1.04-1.08l2.158-1.96H5.75A.75.75 0 015 10z"
-                                        clip-rule="evenodd" />
-                                </svg>
-                            </a>
-                        </p>
-                    </div>
-
-
-                    <div>
-                        <div class="flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                class="w-6 h-6 stroke-gray-400">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                            </svg>
-                            <h2 class="ms-3 text-xl font-semibold text-gray-900">
-                                <a href="https://tailwindcss.com/">Tailwind CSS</a>
-                            </h2>
-                        </div>
-
-                        <p class="mt-4 text-gray-500 text-sm leading-relaxed">
-                            O Laravel Jetstream é construído com o Tailwind, um incrível framework CSS de utilidades.
-                            Você ficará surpreso com a facilidade com que pode criar e manter designs modernos e
-                            atualizados com este framework ao seu alcance.
-                        </p>
-                    </div>
-
-                </div>
+            <div class="mb-8">
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">
+                    Olá, {{ $page.props.auth.user.name.split(' ')[0] }}
+                </h1>
+                <p class="text-gray-500 text-sm sm:text-base">Como está sua saúde hoje?</p>
             </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+
+                <Link href="#" class="flex flex-col items-center justify-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-3">
+                        <i class="pi pi-file-pdf text-2xl text-blue-600"></i>
+                    </div>
+                    <span class="text-sm font-semibold text-gray-700 text-center">Exames</span>
+                </Link>
+
+                <Link href="#" class="flex flex-col items-center justify-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    <div class="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-3">
+                        <i class="pi pi-shield text-2xl text-green-600"></i>
+                    </div>
+                    <span class="text-sm font-semibold text-gray-700 text-center">Vacinas</span>
+                </Link>
+
+                <Link href="#" class="flex flex-col items-center justify-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    <div class="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mb-3">
+                        <i class="pi pi-map-marker text-2xl text-orange-600"></i>
+                    </div>
+                    <span class="text-sm font-semibold text-gray-700 text-center">Guia Médico</span>
+                </Link>
+
+                <Link href="#" class="flex flex-col items-center justify-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    <div class="w-16 h-16 bg-purple-50 rounded-full flex items-center justify-center mb-3">
+                        <i class="pi pi-paperclip text-2xl text-purple-600"></i>
+                    </div>
+                    <span class="text-sm font-semibold text-gray-700 text-center">Receitas</span>
+                </Link>
+
+                <Link href="#" class="flex flex-col items-center justify-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-3">
+                        <i class="pi pi-heart-fill text-2xl text-red-600"></i>
+                    </div>
+                    <span class="text-sm font-semibold text-gray-700 text-center">Histórico PS</span>
+                </Link>
+
+                <Link href="#" class="flex flex-col items-center justify-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    <div class="w-16 h-16 bg-teal-50 rounded-full flex items-center justify-center mb-3">
+                        <i class="pi pi-id-card text-2xl text-teal-600"></i>
+                    </div>
+                    <span class="text-sm font-semibold text-gray-700 text-center">Meu Plano</span>
+                </Link>
+            </div>
+
+            <div class="mt-8 bg-blue-600 rounded-3xl p-6 text-white shadow-lg overflow-hidden relative">
+                <div class="relative z-10">
+                    <h3 class="text-lg font-bold">Informação importante</h3>
+                    <p class="text-blue-100 text-sm mt-2">
+                        Você tem 1 exame pendente de visualização realizado na clínica **CliniCenter**.
+                    </p>
+                    <button class="mt-4 bg-white text-blue-600 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider">
+                        Ver Resultado
+                    </button>
+                </div>
+                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-blue-500 rounded-full opacity-50"></div>
+            </div>
+
         </div>
     </AppLayout>
 </template>

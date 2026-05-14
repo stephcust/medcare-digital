@@ -6,12 +6,10 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
-use App\Helpers\LoginFunctions;
 use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -32,45 +30,22 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // override
+        // Autenticação padrão do Laravel Fortify
         Fortify::authenticateUsing(function (Request $request) {
-            $connection = env('VITE_USER_CONNECTION', 'mariadb');
+            $cpf = (string) $request->input('cpf');
+            $cpfDigits = preg_replace('/\D/', '', $cpf);
 
-            // se login é o heimdall, buscar permissões baseado no system_key
-            if ($connection == 'heimdall') {
-                $system_key = env('VITE_SYSTEM_KEY', 'projeto_base_laravel');
-                $dadosLogin = $request->merge(['system_key' => $system_key])->toArray();
-                $response = Http::post(env("HEIMDALL_URL", "http://heimdalldev.semsa") . '/api/login', $dadosLogin)?->json();
+            $user = User::where('cpf', $cpf)
+                ->orWhere('cpf', $cpfDigits)
+                ->orWhereRaw("REPLACE(REPLACE(cpf, '.', ''), '-', '') = ?", [$cpfDigits])
+                ->first();
 
-                // se não retornar sucesso, retornar erro
-                if (!$response || !$response['success']) {
-                    $msg = $response['message'] ?? "Erro no servidor";
-                    $bag = ['email' => ' ', 'cpf_cnpj' => ' ', 'username' => ' ', "password" => $msg];
-                    return redirect()->back()->withInput($request->except(["password", "_token"]))->withErrors($bag);
-                    // return $this->sendFailedLoginResponse($request);
-                }
-                $dados = $response['data'];
-
-                // $user = (object)($dados['user'] ?? null);
-                // "user" => $user,
-                $menus = LoginFunctions::montarMenusPorPermissoes($dados['items'] ?? []);
-                $permissoes = LoginFunctions::filterCollectRoutes($dados['items']);
-                session([
-                    "heimdallToken" => $dados['token'],
-                    "perfis" => $dados['perfis'],
-                    "menus" => $menus,
-                    "permissoes" => $permissoes,
-                ]);
+            if ($user && Hash::check($request->password, $user->password)) {
+                return $user;
             }
-
-            // etapas padrões do Laravel Fortify
-            if ($connection == 'heimdall') $user = User::where('cpf_cnpj', $request->cpf_cnpj)->first();
-            else $user = User::where('email', $request->email)->first();
-
-            if ($user && Hash::check($request->password, $user->password)) return $user;
         });
 
-        // padrões do Laravel Fortify
+        // Configurações padrão do Laravel Fortify
         Fortify::createUsersUsing(CreateNewUser::class);
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);

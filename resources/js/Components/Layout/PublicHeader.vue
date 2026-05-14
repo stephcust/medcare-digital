@@ -1,6 +1,6 @@
 <script setup>
 /** @import { MenuItem } from '@/Assets/GlobalTypes'; */
-import LogoPMMHorizontal from '@/Components/Logos/LogoPMMHorizontal.vue';
+import LogoHorizontal from '@/Components/Logos/LogoHorizontal.vue';
 import { Link } from '@inertiajs/vue3';
 import { PrimeIcons as PI } from '@primevue/core/api';
 import Button from 'primevue/button';
@@ -33,7 +33,7 @@ const topNavItems = ref(inicialItems);
         <Menubar :model="topNavItems"
             class="min-h-[75px] max-h-[75px] text-white border-none rounded-none max-w-7xl mx-auto bg-primary-800">
             <template #start>
-                <LogoPMMHorizontal />
+                <LogoHorizontal />
             </template>
 
             <template #item="{ item, props, hasSubmenu, root }">

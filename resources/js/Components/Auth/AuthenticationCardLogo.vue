@@ -9,6 +9,6 @@ const href = route('dashboard');
         <Link :href class="text-center">
         <img width="110px" src="/storage/logo-brasao-pmm.png" />
         </Link>
-        <div class="text-900 text-3xl font-medium mb-2 mt-1">Prefeitura de Manaus</div>
+        <div class="text-900 text-3xl font-medium mb-2 mt-1">MedCare Digital</div>
     </div>
 </template>
