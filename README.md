@@ -95,12 +95,6 @@ php artisan storage:link
         - Para este exemplo, pode ser usando a `DB_CONNECTION=sqlite` e comentar as outras variáveis
         - Caso queria usar o seu Banco, altere todos as variáveis para efetuar a conexão
 
-5.  Com a configuração do banco efetuada, algumas tabelas devem ser criadas para que a **autenticação, sessão e cache** padrão do Laravel funcione. Para isto, rode as migrações:
-
-```bash
-php artisan migrate
-```
-
 ## Execução em Desenvolvimento
 
 Com a configuração do banco finalizada e bem sucedida, pode-se abrir o servidor de desenvolvimento:
@@ -208,7 +202,7 @@ Deve seguir os mesmos padrões citados para o frontend. Contendo apenas ações 
 ```
 <!-- Nome do controller deve conter o contexto de ações utilizadas dentro do arquivo -->
 app/http/Controllers/Produto/
-    └── ProdutoController.vue
+    └── ProdutoController.php
 ```
 
 _Observações_: <u>em contextos de ações que envolvem duas ou mais tabelas/modelo deve-se criar outro controller com o nome do modelo Mandatório na frente. Ex:</u>
@@ -216,7 +210,7 @@ _Observações_: <u>em contextos de ações que envolvem duas ou mais tabelas/mo
 ```
 <!-- Controller que realiza inclusões, alterações e exclusões de produtos em um carrinhos de compras -->
 app/http/Controllers/Produto/
-    └── CarrinhoProdutoController.vue
+    └── CarrinhoProdutoController.php
 ```
 
 **Exemplo de Validações**
