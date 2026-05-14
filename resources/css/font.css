@@ -1,0 +1,81 @@
+@layer base {
+    @font-face {
+        font-family: "Branding SF";
+        src: url("./fonts/Branding-Thin.otf") format("opentype");
+        font-weight: 100;
+    }
+    @font-face {
+        font-family: "Branding SF";
+        src: url("./fonts/Branding-Thin-Italic.otf") format("opentype");
+        font-weight: 100;
+        font-style: italic;
+    }
+    @font-face {
+        font-family: "Branding SF";
+        src: url("./fonts/Branding-Light.otf") format("opentype");
+        font-weight: 200;
+    }
+    @font-face {
+        font-family: "Branding SF";
+        src: url("./fonts/Branding-Light-Italic.otf") format("opentype");
+        font-weight: 200;
+        font-style: italic;
+    }
+    @font-face {
+        font-family: "Branding SF";
+        src: url("./fonts/Branding-Semilight.otf") format("opentype");
+        font-weight: 300;
+    }
+    @font-face {
+        font-family: "Branding SF";
+        src: url("./fonts/Branding-Semilight-Italic.otf")
+            format("opentype");
+        font-weight: 300;
+        font-style: italic;
+    }
+    @font-face {
+        font-family: "Branding SF";
+        src: url("./fonts/Branding-Medium.otf") format("opentype");
+        font-weight: normal;
+    }
+    @font-face {
+        font-family: "Branding SF";
+        src: url("./fonts/Branding-Medium-Italic.otf") format("opentype");
+        font-weight: normal;
+        font-style: italic;
+    }
+    @font-face {
+        font-family: "Branding SF";
+        src: url("./fonts/Branding-Semibold.otf") format("opentype");
+        font-weight: 600;
+    }
+    @font-face {
+        font-family: "Branding SF";
+        src: url("./fonts/Branding-Semibold-Italic.otf")
+            format("opentype");
+        font-weight: 600;
+        font-style: italic;
+    }
+    @font-face {
+        font-family: "Branding SF";
+        src: url("./fonts/Branding-Bold.otf") format("opentype");
+        font-weight: bold;
+    }
+    @font-face {
+        font-family: "Branding SF";
+        src: url("./fonts/Branding-Bold-Italic.otf") format("opentype");
+        font-weight: bold;
+        font-style: italic;
+    }
+    @font-face {
+        font-family: "Branding SF";
+        src: url("./fonts/Branding-Black.otf") format("opentype");
+        font-weight: 900;
+    }
+    @font-face {
+        font-family: "Branding SF";
+        src: url("./fonts/Branding-Black-Italic.otf") format("opentype");
+        font-weight: 900;
+        font-style: italic;
+    }
+}

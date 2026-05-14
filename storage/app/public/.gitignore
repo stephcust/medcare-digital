@@ -1,0 +1,7 @@
+*
+!/fonts
+!/fonts/*
+!favicons
+!favicons/*
+!*.png
+!.gitignore

@@ -1,0 +1,20 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Executar arquivo PHP no Laravel",
+        "type": "shell",
+        "command": "php artisan tinker ${file}",
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "presentation": {
+          "reveal": "always",
+          "panel": "new",
+          "focus": true
+        },
+        "problemMatcher": []
+      }
+    ]
+  }

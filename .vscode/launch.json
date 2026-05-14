@@ -1,0 +1,21 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Executar arquivo PHP no Laravel",
+        "type": "php",
+        "request": "launch",
+        "runtimeArgs": [
+          "-dxdebug.start_with_request=yes"
+        ],
+        "program": "${workspaceFolder}/artisan",
+        "args": [
+          "tinker",
+          "${file}"
+        ],
+        "cwd": "${workspaceFolder}",
+        "externalConsole": true,
+        "port": 9000
+      }
+    ]
+  }
