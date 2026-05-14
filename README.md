@@ -1,4 +1,4 @@
-# Projeto Laravel 11 com Inertia.js e Vue 3
+# Projeto MedCare Digital com Laravel 11, Inertia.js e Vue 3
 
 ## Requisitos
 
@@ -41,7 +41,7 @@
 1. Clone o repositório em sua máquina local:
 
 ```bash
-git clone http://gitlab.semsa/base-projects/template-laravel11-sakai-vue.git
+git clone https://github.semsa/base-projects/template-laravel11-sakai-vue.git
 ```
 
 2. Instale as bibliotecas de PHP do projeto com Composer:
