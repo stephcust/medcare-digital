@@ -20,43 +20,6 @@ export type JetStreamProp = {
     managesProfilePhotos: boolean
 }
 
-export namespace Heimdall {
-    export type UserProfile = {
-       id: number,
-       profile_id: number,
-        status: 1 | 0,
-        profile: Profile,
-    }
-    export type Profile = {
-        id: number,
-        name: string,
-        short_name: string,
-        status: 1 | 0,
-    }
-    export type Menu = {
-        label: string,
-        icon: string,
-        route: keyof RouteList,
-        href: string,
-        target?: '_blank'|'_self'|'_parent'|'_top',
-        items?: Menu[]
-    }
-    export type Prop = {
-        token: string,
-        perfis: UserProfile[],
-        menus: {
-            left_sidebar: Menu[],
-            topnav: Menu[],
-            topnav_user: Menu[],
-            topnav_right: Menu[],
-        },
-        permissoes: {
-            [key: string]: string,
-        }
-    }
-}
-
-
 export type Breadcrumb = {
     title: string;
     url: string;

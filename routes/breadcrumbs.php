@@ -3,50 +3,22 @@
 use Diglactic\Breadcrumbs\Breadcrumbs;
 use Diglactic\Breadcrumbs\Generator as BreadcrumbTrail;
 
-// APP
 Breadcrumbs::before(function (BreadcrumbTrail $trail) {
-    $appName = config('app.name');
-    $trail->push($appName, route('landingPage'));
+    $trail->push(config('app.name'), route('home'));
 });
 
-// APP > [Início]
-Breadcrumbs::for('dashboard', function (BreadcrumbTrail $trail) {
-    $trail->push('Início', route('dashboard'));
+Breadcrumbs::for('exames.index', function (BreadcrumbTrail $trail) {
+    $trail->push('Meus Exames', route('exames.index'));
 });
 
-// APP > [Exemplos]
-Breadcrumbs::for('exemplos.', function (BreadcrumbTrail $trail) {
-    $trail->push('Exemplos');
+Breadcrumbs::for('exames.create', function (BreadcrumbTrail $trail) {
+    $trail->parent('exames.index');
+    $trail->push('Anexar Exame', route('exames.create'));
 });
 
-// APP > Exemplos > [Dashboard]
-Breadcrumbs::for('exemplos.dashboard', function (BreadcrumbTrail $trail) {
-    $trail->parent('exemplos.');
-    $trail->push('Dashboard', route('exemplos.dashboard'));
-});
+Breadcrumbs::for('exames.show', function (BreadcrumbTrail $trail) {
+    $exame = request()->route('exame');
 
-// APP > Exemplos > [Dashboard]
-Breadcrumbs::for('exemplos.primevue', function (BreadcrumbTrail $trail) {
-    $trail->parent('exemplos.');
-    $trail->push('PrimeVue', route('exemplos.primevue'));
-});
-
-// APP > Exemplos > [Tarefas]
-Breadcrumbs::for('tarefa.index', function (BreadcrumbTrail $trail) {
-    $trail->parent('exemplos.');
-    $trail->push('Listar Tarefas', route('tarefa.index'));
-});
-Breadcrumbs::for('tarefa.create', function (BreadcrumbTrail $trail) {
-    $trail->parent('tarefa.index');
-    $trail->push('Nova Tarefa', route('tarefa.create'));
-});
-Breadcrumbs::for('tarefa.edit', function (BreadcrumbTrail $trail) {
-    $tarefa = request()->route()->parameter('tarefa');
-    $trail->parent('tarefa.index');
-    $trail->push('Editar Tarefa', route('tarefa.edit', $tarefa));
-});
-Breadcrumbs::for('tarefa.show', function (BreadcrumbTrail $trail) {
-    $tarefa = request()->route()->parameter('tarefa');
-    $trail->parent('tarefa.index');
-    $trail->push('Ver Tarefa', route('tarefa.show', $tarefa));
+    $trail->parent('exames.index');
+    $trail->push($exame?->nome ?? 'Detalhes do Exame', route('exames.show', $exame));
 });

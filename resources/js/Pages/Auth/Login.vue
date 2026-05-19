@@ -43,7 +43,7 @@ const submit = () => {
 
     <AuthenticationCard>
         <AuthenticationCardLogo />
-        <div class="text-500 font-medium -mt-4 mb-5 text-center">Faça login para continuar</div>
+        <div class="text-500 font-medium my-5 text-center">Faça login para continuar</div>
 
         <div v-if="status" class="mb-4 font-medium text-sm text-green-600">
             {{ status }}

@@ -1,8 +1,8 @@
 <?php
 
+use App\Http\Controllers\ExameController;
 use App\Http\Controllers\Exemplos\DashboardController;
 use App\Http\Controllers\Exemplos\PrimeVueController;
-use App\Http\Controllers\Exemplos\TarefaController;
 use App\Http\Controllers\InicioController;
 use App\Http\Controllers\Visitante\VisitanteController;
 use Illuminate\Support\Facades\Route;
@@ -16,17 +16,18 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     // Página Inicial após autenticação
     Route::get('dashboard', [InicioController::class, 'inicioAutenticado'])->name('dashboard');
     Route::get('home')->name('home')->uses([InicioController::class, 'inicioAutenticado']);
-    Route::get('teste_vue')->name('teste_vue')->uses([PrimeVueController::class, 'index']);
+    // Route::get('teste_vue')->name('teste_vue')->uses([PrimeVueController::class, 'index']);
     Route::get('url_errada', fn() => abort(404))->name('url_errada');
     Route::get('relatorio-exemplo', fn() => abort(404))->name('relatorio.exemplo');
+    // Route::prefix('exemplos')->name('exemplos.')->group(function () {
+    //     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    //     Route::get('primevue', [PrimeVueController::class, 'index'])->name('primevue');
+    // });
 
-    // CRUD Multi Page (Listagem, Criação, Edição)
-    Route::post('tarefa/{tarefa}/complete', [TarefaController::class, 'complete'])->name('tarefa.complete');
-    Route::resource('tarefa', TarefaController::class);
+    Route::prefix('paciente')->group(function () {
+        // Rota específica para o download seguro de arquivos privados
+        Route::get('exames/{exame}/download', [ExameController::class, 'download'])->name('exames.download');
 
-    // Exemplos de Funcionalidades Comuns
-    Route::prefix('exemplos')->name('exemplos.')->group(function () {
-        Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        Route::get('primevue', [PrimeVueController::class, 'index'])->name('primevue');
+        Route::resource('exames', ExameController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
     });
 });

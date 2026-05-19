@@ -3,39 +3,52 @@ import { useApp } from '@/Assets/Composables';
 import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
-defineProps({ title: String });
+const props = defineProps({ title: String });
 
 const app = useApp();
 const trail = computed(() => app.breadcrumbs?.slice(0, -1));
 const active = computed(() => app.breadcrumbs?.at(-1));
+const pageTitle = computed(() => active.value?.title ?? props.title);
 </script>
 
 <template>
     <div v-if="app.breadcrumbs?.length > 0"
-        class="max-w-7xl mx-auto p-1 pb-2 flex flex-col lg:justify-between lg:flex-row">
-        <div class="flex flex-col">
-            <div>
-                <div class="font-medium text-3xl text-surface-900 dark:text-surface-0">{{ active.title }}</div>
-            </div>
-            <ul
-                class="list-none p-0 m-0 flex items-center font-medium text-surface-500 dark:text-surface-300 leading-normal">
-                <template v-for="(t, i) in trail" :key="t.url">
-                    <li>
-                        <Link v-if="t.url" :href="t.url"
-                            class="cursor-pointer hover:text-primary-500 transition-all duration-300">
-                        {{ t.title }}
-                        </Link>
-                        <span v-else>{{ t.title }}</span>
+        class="mx-auto mb-3 max-w-7xl rounded-xl border border-surface-200 bg-white/95 px-4 py-4 shadow-sm sm:px-5">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div class="min-w-0">
+                <ul
+                    class="mb-2 flex list-none items-center gap-2 p-0 text-xs font-semibold uppercase tracking-wide text-surface-500">
+                    <li class="flex items-center">
+                        <i class="pi pi-home text-[0.7rem] text-primary-500"></i>
                     </li>
-                    <li v-if="(i + 1) < trail.length" class="px-2">
-                        <i class="pi pi-angle-right"></i>
+                    <li v-if="trail.length > 0" class="text-surface-300">
+                        <i class="pi pi-angle-right text-[0.65rem]"></i>
                     </li>
-                </template>
-            </ul>
-        </div>
+                    <template v-for="(t, i) in trail" :key="`${t.title}-${i}`">
+                        <li>
+                            <Link v-if="t.url" :href="t.url"
+                                class="rounded-md px-1.5 py-1 text-surface-500 transition hover:bg-surface-100 hover:text-primary-700">
+                            {{ t.title }}
+                            </Link>
+                            <span v-else class="px-1.5 py-1">{{ t.title }}</span>
+                        </li>
+                        <li class="text-surface-300">
+                            <i class="pi pi-angle-right text-[0.65rem]"></i>
+                        </li>
+                    </template>
+                    <li class="truncate rounded-md bg-primary-50 px-2 py-1 text-primary-700">
+                        {{ pageTitle }}
+                    </li>
+                </ul>
 
-        <div class="flex items-center">
-            <slot />
+                <h1 class="truncate text-2xl font-semibold text-surface-950 sm:text-3xl">
+                    {{ pageTitle }}
+                </h1>
+            </div>
+
+            <div class="flex shrink-0 items-center justify-start lg:justify-end">
+                <slot />
+            </div>
         </div>
     </div>
 </template>

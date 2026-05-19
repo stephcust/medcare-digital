@@ -6,7 +6,6 @@ use Diglactic\Breadcrumbs\Breadcrumbs;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Session;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -39,7 +38,6 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        $isHeimdall = env('VITE_USER_CONNECTION', 'mariadb') === 'heimdall';
         $isProduction = config('app.env') === 'production' || config('app.env') === 'prod';
         $isDev = !$isProduction;
         // $notifications = Auth::user()->notifications;
@@ -50,18 +48,8 @@ class HandleInertiaRequests extends Middleware
             'useSidebar' => config('app.use_sidebar'),
             // 'notifications' => $notifications,
             'isProduction' => $isProduction,
-            'isHeimdall' => $isHeimdall,
             'breadcrumbs' => Breadcrumbs::exists($request->route()->getName()) ? Breadcrumbs::generate($request->route()->getName()) : [],
         ]);
-
-        if ($isHeimdall) {
-            $arr = array_merge($arr, [
-                'heimdall.token' => Session::get('heimdallToken'),
-                'heimdall.perfis' => Session::get('perfis', []),
-                'heimdall.menus' => Session::get('menus', []),
-                'heimdall.permissoes' => Session::get('permissoes', []),
-            ]);
-        }
 
         if ($isDev) {
             $arr = array_merge($arr, [

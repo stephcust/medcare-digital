@@ -18,14 +18,6 @@ class User extends Authenticatable
     use Notifiable;
     use TwoFactorAuthenticatable;
 
-    protected $connection;
-
-    public function __construct(array $attributes = [])
-    {
-        parent::__construct($attributes);
-        $this->connection = env('VITE_USER_CONNECTION', 'mariadb');
-    }
-
     protected $fillable = [
         'cpf',
         'name',
