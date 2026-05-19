@@ -47,3 +47,6 @@ RUN chmod -R 777 storage bootstrap/cache
 
 EXPOSE 80
 CMD php artisan serve --host=0.0.0.0 --port=80
+
+# Criando link simbolico para o storage
+CMD php artisan storage:link && php artisan serve --host=0.0.0.0 --port=80
