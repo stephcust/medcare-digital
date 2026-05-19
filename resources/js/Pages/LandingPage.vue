@@ -3,7 +3,26 @@ import PublicLayout from '@/Layouts/PublicLayout.vue';
 import Button from 'primevue/button';
 import Divider from 'primevue/divider';
 import { Link } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
+const heroImageSources = [
+    '/storage/image-medcare1.jpg',
+    '/storage/imagem-medcare1.jpg',
+    '/storage/imagem.jpg',
+    '/storage/imagem',
+];
+
+const heroImageIndex = ref(0);
+const heroImageSrc = ref(heroImageSources[heroImageIndex.value]);
+
+function handleHeroImageError() {
+    if (heroImageIndex.value >= heroImageSources.length - 1) {
+        return;
+    }
+
+    heroImageIndex.value += 1;
+    heroImageSrc.value = heroImageSources[heroImageIndex.value];
+}
 </script>
 
 <template>
@@ -30,9 +49,9 @@ import { Link } from '@inertiajs/vue3';
                     </div>
                 </div>
                 <div class="flex-1 overflow-hidden">
-                    <img src="/storage/image-medcare1.jpg"
+                    <img :src="heroImageSrc"
                         alt="MedCare Saúde Digital"
-                        @error="$event.target.src = '/storage/imagem-medcare1.jpg'"
+                        @error="handleHeroImageError"
                         class="h-full w-full object-cover lg:[clip-path:polygon(12%_0,100%_0%,100%_100%,0_100%)]" />
                 </div>
             </div>

@@ -17,7 +17,7 @@ import BadgeDirective from 'primevue/badgedirective';
 import locale from './locale-pt';
 import { PresetBluePurpleSilver } from '@/Themes/PresetBluePurpleSilver';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName = import.meta.env.VITE_APP_NAME || 'MedCare Digital';
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
