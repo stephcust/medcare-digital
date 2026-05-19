@@ -20,6 +20,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Schema::defaultStringLength(191);
+        // Força o uso de HTTPS em todas as URLs internas se o ambiente for de produção (Render)
+        if (config('app.env') === 'production' || env('APP_ENV') === 'production') {
+            URL::forceScheme('https');
+        }
     }
 }
