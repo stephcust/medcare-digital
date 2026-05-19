@@ -2,24 +2,24 @@
 FROM php:8.2-alpine AS php-stage
 WORKDIR /app
 
-# Instalar extensões mínimas apenas para rodar o Composer no build
-RUN apk add --no-cache git unzip zip
+# Instalar dependências para rodar o Composer e compilar a extensão GD exigida pelo Excel
+RUN apk add --no-cache git unzip zip libpng-dev
+RUN docker-php-ext-install gd
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copiar os arquivos de configuração do PHP
+# Copiar os arquivos de configuração do PHP e rodar o install
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-scripts --no-autoloader
 
-# Copiar o resto do projeto
+# Copiar o resto do projeto e gerar o autoload otimizado
 COPY . .
 RUN composer dump-autoload --no-dev --optimize
 
 # --- ESTÁGIO 2: Compilar o Frontend (Vue 3 + Vite) ---
 FROM node:18-alpine AS build-stage
 WORKDIR /app
-# Copia tudo do estágio do PHP (que já tem a pasta vendor completa)
 COPY --from=php-stage /app /app
 RUN npm install
 RUN npm run build
@@ -28,7 +28,7 @@ RUN npm run build
 FROM php:8.2-alpine
 WORKDIR /var/www/html
 
-# Instalar extensões necessárias do sistema para PostgreSQL e arquivos
+# Instalar extensões necessárias do sistema para PostgreSQL, GD e manipulação de arquivos
 RUN apk add --no-cache \
     postgresql-dev \
     libpng-dev \
