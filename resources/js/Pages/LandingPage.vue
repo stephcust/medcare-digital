@@ -5,24 +5,6 @@ import Divider from 'primevue/divider';
 import { Link } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
-const heroImageSources = [
-    '/storage/image-medcare1.jpg',
-    '/storage/imagem-medcare1.jpg',
-    '/storage/imagem.jpg',
-    '/storage/imagem',
-];
-
-const heroImageIndex = ref(0);
-const heroImageSrc = ref(heroImageSources[heroImageIndex.value]);
-
-function handleHeroImageError() {
-    if (heroImageIndex.value >= heroImageSources.length - 1) {
-        return;
-    }
-
-    heroImageIndex.value += 1;
-    heroImageSrc.value = heroImageSources[heroImageIndex.value];
-}
 </script>
 
 <template>
@@ -49,9 +31,8 @@ function handleHeroImageError() {
                     </div>
                 </div>
                 <div class="flex-1 overflow-hidden">
-                    <img :src="heroImageSrc"
+                    <img src='/storage/image-medcare1.jpg'
                         alt="MedCare Saúde Digital"
-                        @error="handleHeroImageError"
                         class="h-full w-full object-cover lg:[clip-path:polygon(12%_0,100%_0%,100%_100%,0_100%)]" />
                 </div>
             </div>
