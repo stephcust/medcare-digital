@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
-    <title inertia>{{ config('app.name', 'Laravel') }}</title>
+    <title inertia>{{ config('app.name', 'Medcare Digital') }}</title>
 
     {{-- favicon set --}}
     <link rel="icon" href="{{ asset('storage/logo_medcare2.png') }}" type="image/png" />

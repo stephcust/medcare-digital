@@ -56,6 +56,7 @@ const inicialUserMenuItems = [
 
 const page = usePage();
 const userMenu = ref(null);
+const isAuthenticated = computed(() => Boolean(page.props.auth?.user));
 
 const topNavUserMenuItems = computed(() => {
     const items = structuredClone(inicialUserMenuItems);
@@ -82,14 +83,22 @@ const _topNavUserMenuItems = computed(() => {
 });
 
 watchEffect(() => {
-    sidebar.setItems(inicialNavItems.map(recursiveMenuItem));
+    sidebar.setItems(isAuthenticated.value ? inicialNavItems.map(recursiveMenuItem) : []);
 });
 
 function toggleUserMenu(e) {
+    if (!isAuthenticated.value) {
+        return;
+    }
+
     userMenu.value.toggle(e);
 }
 
 function logout() {
+    if (!isAuthenticated.value) {
+        return;
+    }
+
     router.post(route('logout'));
 }
 </script>
@@ -122,7 +131,7 @@ function logout() {
             </template>
 
             <template #end>
-                <button @click="toggleUserMenu"
+                <button v-if="isAuthenticated" @click="toggleUserMenu"
                     class="rounded-full bg-primary-900 p-1 grid place-content-center text-white hover:bg-primary-500 focus:outline-none focus:bg-primary-500 active:bg-primary-500 transition ease-in-out duration-300">
                     <div
                         class="sm:hidden m-0 p-0 flex text-sm rounded-full focus:outline-none focus:border-gray-300 transition items-center justify-center">
@@ -142,7 +151,7 @@ function logout() {
                     </div>
                 </button>
 
-                <Menu ref="userMenu" :model="_topNavUserMenuItems" popup>
+                <Menu v-if="isAuthenticated" ref="userMenu" :model="_topNavUserMenuItems" popup>
                     <template #item="{ item, props }">
                         <span v-if="!item.hasPointer"
                             class="flex items-center cursor-default text-sm ml-2 font-semibold py-1"

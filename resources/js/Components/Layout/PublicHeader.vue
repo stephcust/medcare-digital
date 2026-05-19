@@ -1,31 +1,13 @@
 <script setup>
 /** @import { MenuItem } from '@/Assets/GlobalTypes'; */
+import { isMenuActive } from '@/Components/Layout/Functions';
 import LogoHorizontal from '@/Components/Logos/LogoHorizontal.vue';
 import { Link } from '@inertiajs/vue3';
-import { PrimeIcons as PI } from '@primevue/core/api';
 import Button from 'primevue/button';
 import Menubar from 'primevue/menubar';
-import { ref } from 'vue';
-import { isMenuActive } from '@/Components/Layout/Functions';
 
 /** @type {MenuItem[]} */
-const inicialItems = [{
-    // label: 'Sobre',
-    // icon: PI.QUESTION_CIRCLE,
-    // items: [
-    //     {
-    //         label: 'Política de Privacidade',
-    //         icon: PI.INFO_CIRCLE,
-    //         route: 'policy.show',
-    //     },
-    //     {
-    //         label: 'Termos de Serviço',
-    //         icon: 'pi pi-file-check',
-    //         route: 'terms.show',
-    //     }
-    // ]
-}]
-const topNavItems = ref(inicialItems);
+const topNavItems = [];
 </script>
 
 <template>
@@ -36,8 +18,15 @@ const topNavItems = ref(inicialItems);
                 <LogoHorizontal />
             </template>
 
+            <template #button>
+                <span></span>
+            </template>
+
+            <template #buttonIcon>
+                <span></span>
+            </template>
+
             <template #item="{ item, props, hasSubmenu, root }">
-                <!-- Com Navegação -->
                 <Link v-if="item.route" :href="route(item.route)" v-ripple
                     :class="{ 'text-primary-500 font-semibold': isMenuActive(item) }"
                     class="flex items-center rounded-[4px]" v-bind="props.action">
@@ -46,7 +35,6 @@ const topNavItems = ref(inicialItems);
                 <i v-if="hasSubmenu"
                     :class="['pi pi-angle-down', { 'pi-angle-down ml-2': root, 'pi-angle-right ml-auto': !root }]"></i>
                 </Link>
-                <!-- Sem Navegação -->
                 <a v-else v-ripple :class="{ 'text-primary-500': isMenuActive(item) }"
                     class="flex items-center rounded-[4px]" v-bind="props.action">
                     <span v-if="item.icon" class="mr-1" :class="item.icon" />
