@@ -2,9 +2,9 @@
 FROM php:8.2-alpine AS php-stage
 WORKDIR /app
 
-# Instalar dependências para rodar o Composer e compilar a extensão GD exigida pelo Excel
-RUN apk add --no-cache git unzip zip libpng-dev
-RUN docker-php-ext-install gd
+# Instalar pacotes nativos para compilar as extensões GD e ZIP exigidas pelas planilhas
+RUN apk add --no-cache git unzip zip libpng-dev libzip-dev
+RUN docker-php-ext-install gd zip
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -28,15 +28,16 @@ RUN npm run build
 FROM php:8.2-alpine
 WORKDIR /var/www/html
 
-# Instalar extensões necessárias do sistema para PostgreSQL, GD e manipulação de arquivos
+# Instalar dependências em tempo de execução para o PostgreSQL e arquivos
 RUN apk add --no-cache \
     postgresql-dev \
     libpng-dev \
     libxml2-dev \
+    libzip-dev \
     zip \
     unzip
 
-RUN docker-php-ext-install pdo_pgsql gd bcmath
+RUN docker-php-ext-install pdo_pgsql gd bcmath zip
 
 # Copiar o projeto finalizado com o backend e o frontend compilados
 COPY --from=build-stage /app /var/www/html
