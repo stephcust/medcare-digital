@@ -4,6 +4,7 @@ use App\Http\Controllers\ExameController;
 use App\Http\Controllers\Exemplos\DashboardController;
 use App\Http\Controllers\Exemplos\PrimeVueController;
 use App\Http\Controllers\InicioController;
+use App\Http\Controllers\VacinacaoController;
 use App\Http\Controllers\Visitante\VisitanteController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -29,5 +30,11 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('exames/{exame}/download', [ExameController::class, 'download'])->name('exames.download');
 
         Route::resource('exames', ExameController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
+
+        Route::get('/{paciente}/vacinacoes', [VacinacaoController::class, 'index'])->name('vacinacoes.index');
+        Route::post('/{paciente}/vacinacoes', [VacinacaoController::class, 'store'])->name('vacinacoes.store');
+        Route::delete('/vacinacoes/{vacinacao}', [VacinacaoController::class, 'destroy'])->name('vacinacoes.destroy');
     });
+
+
 });
