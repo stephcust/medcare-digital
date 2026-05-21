@@ -20,8 +20,11 @@ class InicioController extends Controller
         ->with(['user']) // Carrega relacionamento se necessário
         ->orderBy('data_realizacao', 'desc')
         ->get();
+
+        $paciente = auth()->user()->paciente;
         return Inertia::render("InicioAutenticado", [
-            'ultimoExamePendente' => $examesPendentes->first()
+            'ultimoExamePendente' => $examesPendentes->first(),
+            'paciente' => $paciente
         ]);
     }
 }

@@ -20,6 +20,7 @@ return new class extends Migration
             $table->enum('genero', ['Masculino', 'Feminino', 'Outro'])->nullable();
             $table->string('telefone', 20)->nullable();
             $table->string('email')->unique()->nullable();
+            $table->foreignId('user_id')->unique()->constrained('users')->onDelete('cascade');
 
             // Dados de Endereço (Opcionais)
             $table->string('cep', 9)->nullable();

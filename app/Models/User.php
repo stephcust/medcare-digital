@@ -59,4 +59,22 @@ class User extends Authenticatable
     {
         return $this->morphMany(Notification::class, 'notifiable')->orderBy('created_at', 'desc');
     }
+
+    public function paciente()
+    {
+        return $this->hasOne(Paciente::class, 'user_id');
+    }
+
+    protected static function booted()
+    {
+        // Sempre que um usuário for criado, cria um paciente vinculado a ele
+        static::created(function ($user) {
+            $user->paciente()->create([
+                'nome_completo' => $user->name,
+                'email' => $user->email,
+                'cpf' => $user->cpf, // se a tabela de pacientes também usar o CPF
+                // ... adicione outros campos padrões ou deixe como null se forem opcionais no banco
+            ]);
+        });
+    }
 }

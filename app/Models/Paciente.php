@@ -37,4 +37,9 @@ class Paciente extends Model
     {
         return $this->hasMany(Vacinacao::class, 'paciente_id');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }
