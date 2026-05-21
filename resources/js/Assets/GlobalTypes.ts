@@ -23,9 +23,17 @@ export type JetStreamProp = {
 export type Breadcrumb = {
     title: string;
     url: string;
+    actions?: BreadcrumbAction[];
 }
 
 export type Breadcrumbs = Breadcrumb[];
+
+export type BreadcrumbAction = {
+    label: string;
+    icon?: string;
+    url: string;
+    variant?: 'primary' | 'secondary' | 'danger';
+}
 
 export type MenuItem = {
     label: string;
