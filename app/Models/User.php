@@ -70,10 +70,9 @@ class User extends Authenticatable
         // Sempre que um usuário for criado, cria um paciente vinculado a ele
         static::created(function ($user) {
             $user->paciente()->create([
-                'nome_completo' => $user->name,
-                'email' => $user->email,
-                'cpf' => $user->cpf, // se a tabela de pacientes também usar o CPF
-                // ... adicione outros campos padrões ou deixe como null se forem opcionais no banco
+                // Como passamos a usar o relacionamento correto, o Laravel
+                // injeta o 'user_id' automaticamente aqui.
+                // Os demais campos (rg, genero, etc) nascerão como null.
             ]);
         });
     }

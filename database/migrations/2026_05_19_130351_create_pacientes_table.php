@@ -13,23 +13,19 @@ return new class extends Migration
     {
         Schema::create('pacientes', function (Blueprint $table) {
             $table->id();
-            $table->string('nome_completo');
-            $table->date('data_nascimento');
-            $table->string('cpf', 14)->unique()->nullable();
-            $table->string('rg', 20)->nullable();
-            $table->enum('genero', ['Masculino', 'Feminino', 'Outro'])->nullable();
-            $table->string('telefone', 20)->nullable();
-            $table->string('email')->unique()->nullable();
+
+            // Relacionamento com a tabela users (Chave Estrangeira Única)
             $table->foreignId('user_id')->unique()->constrained('users')->onDelete('cascade');
 
-            // Dados de Endereço (Opcionais)
+            // Dados específicos do paciente
+            $table->string('rg')->nullable();
+            $table->string('genero', 20)->nullable();
+            $table->string('telefone')->nullable();
             $table->string('cep', 9)->nullable();
             $table->string('endereco')->nullable();
             $table->string('cidade')->nullable();
             $table->string('estado', 2)->nullable();
-
-            // Informações Clínicas Básicas
-            $table->string('tipo_sanguineo', 3)->nullable(); // Ex: A+, O-
+            $table->string('tipo_sanguineo', 5)->nullable();
             $table->text('alergias_conhecidas')->nullable();
 
             $table->timestamps();
