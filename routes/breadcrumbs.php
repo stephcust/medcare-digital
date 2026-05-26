@@ -16,6 +16,12 @@ Breadcrumbs::for('exames.index', function (BreadcrumbTrail $trail) {
                 'url' => route('exames.create'),
                 'variant' => 'primary',
             ],
+            [
+                'label' => 'Voltar',
+                'icon' => 'pi pi-arrow-left',
+                'url' => route('home'),
+                'variant' => 'secondary',
+            ],
         ],
     ]);
 });

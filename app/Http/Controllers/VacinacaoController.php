@@ -5,14 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\Paciente;
 use App\Models\Vacinacao;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class VacinacaoController extends Controller
 {
     public function index(Paciente $paciente)
     {
-        $vacinacoes = Vacinacao::where('paciente_id', $paciente->id)
-            ->with('usuario:id,name') // Traz o nome do profissional logado
+        // Segurança: Garante que o usuário logado só possa ver as vacinas do SEU próprio paciente
+        if (Auth::user()->paciente->id !== $paciente->id) {
+            abort(403, 'Acesso não autorizado ao prontuário deste paciente.');
+        }
+
+        // Busca as vacinações do paciente ordenadas pela data de aplicação mais recente
+        $vacinacoes = $paciente->vacinacoes()
             ->orderBy('data_aplicacao', 'desc')
             ->get();
 

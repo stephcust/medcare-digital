@@ -22,7 +22,6 @@ return new class extends Migration
             $table->date('data_aplicacao');
             $table->date('data_proxima_dose')->nullable(); // Aprazamento
             $table->text('observacoes')->nullable(); // Reações adversas ou notas clínicas
-            $table->foreignId('usuario_id')->constrained('users'); // Profissional que registrou
             $table->timestamps();
         });
     }

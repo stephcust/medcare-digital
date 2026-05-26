@@ -1,152 +1,80 @@
 <script setup>
-import { ref } from 'vue';
-import { useForm } from '@inertiajs/vue3';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { Link, router } from '@inertiajs/vue3';
 
-const propriedades = defineProps({
-  paciente: Object,
-  vacinacoes: Array
+defineProps({
+    paciente: Object,
+    vacinacoes: Array,
 });
 
-const abrirModal = ref(false);
-
-const formulario = useForm({
-  nome_vacina: '',
-  numero_dose: '1ª Dose',
-  lote: '',
-  fabricante: '',
-  data_aplicacao: new Date().toISOString().substr(0, 10), // Define o dia atual como padrão
-  data_proxima_dose: '',
-  observacoes: ''
-});
-
-const enviarFormulario = () => {
-  formulario.post(route('pacientes.vacinacoes.salvar', propriedades.paciente.id), {
-    onSuccess: () => {
-      abrirModal.value = false;
-      formulario.reset();
+const deletarVacina = (id) => {
+    if (confirm('Deseja realmente remover este registro de vacinação da sua carteira digital?')) {
+        router.delete(route('vacinacoes.destroy', id));
     }
-  });
 };
 
-const removerRegistro = (id) => {
-  if (confirm('Deseja realmente excluir em definitivo este registro de vacinação?')) {
-    formulario.delete(route('vacinacoes.excluir', id));
-  }
-};
-
-const formatarData = (stringData) => {
-  if (!stringData) return '';
-  const data = new Date(stringData);
-  return data.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+const formatarData = (dataStr) => {
+    if (!dataStr) return '';
+    return new Date(dataStr).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 };
 </script>
 
 <template>
-  <div class="p-6 max-w-7xl mx-auto">
-    <div class="flex justify-between items-center mb-6 bg-white p-4 rounded-lg shadow-sm">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-800">Caderneta de Vacinação</h1>
-        <p class="text-sm text-gray-600">Paciente: <span class="font-semibold text-indigo-600">{{ paciente.name }}</span></p>
-      </div>
-      <button @click="abrirModal = true" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md shadow transition">
-        + Registrar Vacina
-      </button>
-    </div>
+    <AppLayout title="Minhas Vacinas">
+        <div class="w-full max-w-5xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
 
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-      <table class="min-w-full divide-y divide-gray-200 text-left text-sm">
-        <thead class="bg-gray-50 text-gray-700 uppercase text-xs font-semibold">
-          <tr>
-            <th class="px-6 py-3">Vacina / Imunizante</th>
-            <th class="px-6 py-3">Dose</th>
-            <th class="px-6 py-3">Lote / Fabricante</th>
-            <th class="px-6 py-3">Data de Aplicação</th>
-            <th class="px-6 py-3">Próxima Dose</th>
-            <th class="px-6 py-3">Registrado por</th>
-            <th class="px-6 py-3 text-right">Ações</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-          <tr v-for="vacina in vacinacoes" :key="vacina.id" class="hover:bg-gray-50">
-            <td class="px-6 py-4 font-medium text-gray-900">{{ vacina.nome_vacina }}</td>
-            <td class="px-6 py-4">
-              <span class="px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">{{ vacina.numero_dose }}</span>
-            </td>
-            <td class="px-6 py-4 text-gray-600">
-              <div class="text-xs">Lote: {{ vacina.lote || 'Não informado' }}</div>
-              <div class="text-xs text-gray-400">{{ vacina.fabricante || 'Não informado' }}</div>
-            </td>
-            <td class="px-6 py-4 text-gray-700">{{ formatarData(vacina.data_aplicacao) }}</td>
-            <td class="px-6 py-4 text-gray-700 font-medium">
-              <span v-if="vacina.data_proxima_dose" class="text-amber-600">{{ formatarData(vacina.data_proxima_dose) }}</span>
-              <span v-else class="text-gray-400">-</span>
-            </td>
-            <td class="px-6 py-4 text-xs text-gray-500">{{ vacina.usuario?.name }}</td>
-            <td class="px-6 py-4 text-right">
-              <button @click="removerRegistro(vacina.id)" class="text-red-600 hover:text-red-900 font-semibold text-xs">Excluir</button>
-            </td>
-          </tr>
-          <tr v-if="vacinacoes.length === 0">
-            <td colspan="7" class="text-center py-8 text-gray-500">Nenhuma vacina registrada para este paciente até o momento.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div v-if="abrirModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div class="bg-white rounded-lg shadow-xl max-w-lg w-full p-6 relative">
-        <h3 class="text-lg font-bold text-gray-900 mb-4">Registrar Aplicação de Vacina</h3>
-
-        <form @submit.prevent="enviarFormulario" class="space-y-4">
-          <div>
-            <label class="block text-xs font-medium text-gray-700">Nome da Vacina *</label>
-            <input v-model="formulario.nome_vacina" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-medium text-gray-700">Dose *</label>
-              <select v-model="formulario.numero_dose" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                <option>1ª Dose</option>
-                <option>2ª Dose</option>
-                <option>3ª Dose</option>
-                <option>Dose Única</option>
-                <option>Reforço</option>
-              </select>
+            <div class="mb-8">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Caderneta de Vacinação</h1>
+                    <p class="text-sm text-gray-500">Histórico unificado de imunizantes e doses aplicadas.</p>
+                </div>
             </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-700">Número do Lote</label>
-              <input v-model="formulario.lote" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+
+            <div v-if="vacinacoes.length === 0" class="bg-white rounded-2xl p-12 text-center border border-gray-100 shadow-sm">
+                <i class="pi pi-folder-open text-4xl text-gray-300 mb-3 block"></i>
+                <p class="text-gray-500 text-sm">Nenhuma vacina localizada na sua conta.</p>
             </div>
-          </div>
 
-          <div>
-            <label class="block text-xs font-medium text-gray-700">Fabricante / Laboratório</label>
-            <input v-model="formulario.fabricante" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-          </div>
+            <div v-else class="relative border-s border-gray-200 ms-2 sm:ms-4 space-y-6">
+                <div v-for="vacina in vacinacoes" :key="vacina.id" class="mb-6 ms-6 relative">
+                    <span class="absolute -start-[31px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full ring-4 ring-white bg-green-600"></span>
 
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-medium text-gray-700">Data de Aplicação *</label>
-              <input v-model="formulario.data_aplicacao" type="date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                    <div class="bg-white p-5 lg:p-7 rounded-2xl border border-gray-100 shadow-sm hover:border-gray-200 transition-colors">
+                        <div class="flex justify-between items-start gap-2">
+                            <div>
+                                <span class="text-xs font-bold text-gray-400 block uppercase tracking-wider mb-1">
+                                    Aplicação: {{ formatarData(vacina.data_aplicacao) }}
+                                </span>
+                                <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                                    {{ vacina.nome_vacina }}
+                                    <span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-bold">
+                                        {{ vacina.numero_dose }}
+                                    </span>
+                                </h3>
+
+                                <div class="mt-2 space-y-1 text-sm text-gray-500">
+                                    <p v-if="vacina.lote"><i class="pi pi-barcode text-xs me-1"></i> Lote: {{ vacina.lote }}</p>
+                                    <p v-if="vacina.fabricante"><i class="pi pi-building text-xs me-1"></i> Fabricante: {{ vacina.fabricante }}</p>
+                                    <p v-if="vacina.data_proxima_dose" class="text-amber-600 font-medium">
+                                        <i class="pi pi-calendar-plus text-xs me-1"></i> Próxima Dose: {{ formatarData(vacina.data_proxima_dose) }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- <span :class="['text-[10px] font-bold px-2 py-1 rounded-md uppercase', vacina.origem === 'api' ? 'bg-teal-50 text-teal-700 border border-teal-100' : 'bg-purple-50 text-purple-700 border border-purple-100']">
+                                {{ vacina.origem === 'api' ? 'API / Clínica' : 'Manual' }}
+                            </span> -->
+                        </div>
+
+                        <!-- <div class="mt-4 pt-4 border-t border-gray-50 flex items-center justify-end">
+                            <button @click="deletarVacina(vacina.id)" class="text-xs font-medium text-red-500 hover:text-red-700">
+                                <i class="pi pi-trash"></i> Excluir Registro
+                            </button>
+                        </div> -->
+                    </div>
+                </div>
             </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-700">Próxima Dose (Aprazamento)</label>
-              <input v-model="formulario.data_proxima_dose" type="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-            </div>
-          </div>
 
-          <div>
-            <label class="block text-xs font-medium text-gray-700">Observações / Reações Adversas</label>
-            <textarea v-model="formulario.observacoes" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
-          </div>
-
-          <div class="flex justify-end space-x-3 pt-2">
-            <button type="button" @click="abrirModal = false" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md sm:text-sm">Cancelar</button>
-            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md sm:text-sm shadow">Salvar Registro</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+        </div>
+    </AppLayout>
 </template>
