@@ -1,79 +1,154 @@
 <script setup>
+import { ref, computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { router } from '@inertiajs/vue3';
 
-defineProps({
+const propriedades = defineProps({
     paciente: Object,
     receitas: Array,
     success: String
 });
 
-const deletarReceita = (id) => {
-    if (confirm('Deseja realmente remover esta receita do seu histórico digital?')) {
-        router.delete(route('receitas.destroy', id));
-    }
-};
+// Estado do filtro ativo ('Todas', 'Ativas', 'Concluídas', 'Expiradas')
+const filtroSelecionado = ref('Todas');
 
 const formatarData = (dataStr) => {
     if (!dataStr) return '';
     return new Date(dataStr).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 };
+
+// Deletar registro mantendo o fluxo
+const deletarReceita = (id) => {
+    if (confirm('Deseja realmente remover esta prescrição do seu histórico?')) {
+        router.delete(route('receitas.destroy', id));
+    }
+};
+
+// 1. Cálculos dos Cards Informativos superiores (Métricas do topo)
+const totalReceitasAtivas = computed(() => {
+    return propriedades.receitas.filter(r => r.status === 'Ativa').length;
+});
+
+const totalMedicamentosEmUso = computed(() => {
+    return propriedades.receitas
+        .filter(r => r.status === 'Ativa')
+        .reduce((acumulador, r) => acumulador + (Array.isArray(r.medicamentos) ? r.medicamentos.length : 0), 0);
+});
+
+// 2. Filtro reativo da listagem
+const receitasFiltradas = computed(() => {
+    if (filtroSelecionado.value === 'Todas') return propriedades.receitas;
+    return propriedades.receitas.filter(r => r.status === filtroSelecionado.value);
+});
 </script>
 
 <template>
-    <AppLayout title="Minhas Receitas">
-        <div class="w-full max-w-5xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <AppLayout title="Receitas Médicas">
+        <div class="w-full max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 bg-gray-50 min-h-screen">
 
-            <div class="mb-8">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-800">Prescrições e Receitas</h1>
-                    <p class="text-sm text-gray-500">Histórico digitalizado de orientações médicas e medicamentos.</p>
+            <div class="mb-6">
+                <h1 class="text-2xl font-bold text-gray-800">Receitas Médicas</h1>
+                <p class="text-sm text-gray-500">Visualize e imprima suas prescrições e medicamentos</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between h-36">
+                    <div>
+                        <span class="text-sm font-medium text-gray-400 block">Receitas Ativas</span>
+                        <span class="text-4xl font-bold text-green-600 mt-2 block">{{ totalReceitasAtivas }}</span>
+                    </div>
+                    <div class="text-xs text-green-700 flex items-center gap-1.5 pt-2 border-t border-gray-50">
+                        <i class="pi pi-file"></i> Prescrições válidas
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between h-36">
+                    <div>
+                        <span class="text-sm font-medium text-gray-400 block">Medicamentos em Uso</span>
+                        <span class="text-4xl font-bold text-blue-600 mt-2 block">{{ totalMedicamentosEmUso }}</span>
+                    </div>
+                    <div class="text-xs text-blue-700 flex items-center gap-1.5 pt-2 border-t border-gray-50">
+                        <i class="pi pi-link"></i> Medicamentos ativos
+                    </div>
                 </div>
             </div>
 
-            <div v-if="success" class="mb-6 bg-green-50 border border-green-200 text-green-700 p-4 rounded-xl text-sm font-semibold">
-                {{ success }}
+            <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+                <button
+                    v-for="status in ['Todas', 'Ativas', 'Concluídas', 'Expiradas']"
+                    :key="status"
+                    @click="filtroSelecionado = status"
+                    :class="['px-4 py-1.5 text-xs font-semibold rounded-full border transition-all shrink-0',
+                        filtroSelecionado === status
+                        ? 'bg-primary-900 text-white border-primary-900 shadow-sm'
+                        : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                    ]"
+                >
+                    {{ status }}
+                </button>
             </div>
 
-            <div v-if="receitas.length === 0" class="bg-white rounded-2xl p-12 text-center border border-gray-100 shadow-sm">
-                <i class="pi pi-file text-4xl text-gray-300 mb-3 block"></i>
-                <p class="text-gray-500 text-sm">Nenhuma receita médica localizada para a sua conta.</p>
-            </div>
-
-            <div v-else class="relative border-s border-gray-200 ms-2 sm:ms-4 space-y-6">
-                <div v-for="receita in receitas" :key="receita.id" class="mb-6 ms-6 relative">
-                    <span class="absolute -start-[31px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full ring-4 ring-white bg-purple-600"></span>
-
-                    <div class="bg-white p-5 lg:p-7 rounded-2xl border border-gray-100 shadow-sm hover:border-gray-200 transition-colors">
-                        <div class="flex justify-between items-start gap-2">
-                            <div class="w-full">
-                                <span class="text-xs font-bold text-gray-400 block uppercase tracking-wider mb-1">
-                                    Emissão: {{ formatarData(receita.data_emissao) }}
+            <div class="space-y-6">
+                <div
+                    v-for="receita in receitasFiltradas"
+                    :key="receita.id"
+                    class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden"
+                >
+                    <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <h3 class="text-lg font-bold text-gray-800">{{ receita.medico }}</h3>
+                                <span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+                                    {{ receita.status }}
                                 </span>
-                                <h3 class="text-base font-bold text-gray-800 flex items-center gap-2 mb-3">
-                                    <i class="pi pi-user text-purple-600 text-sm"></i> {{ receita.medico }}
-                                </h3>
-
-                                <div class="bg-gray-50 p-4 rounded-xl text-sm text-gray-700 whitespace-pre-line leading-relaxed border border-gray-100">
-                                    {{ receita.medicamentos }}
-                                </div>
-
-                                <div class="mt-3 text-xs text-gray-400 flex items-center gap-2" v-if="receita.caminho_arquivo">
-                                    <i class="pi pi-paperclip"></i> Possui documento digital assinado anexo.
-                                </div>
                             </div>
-
-                            <span class="text-[10px] font-bold px-2 py-1 rounded-md uppercase bg-teal-50 text-teal-700 border border-teal-100 shrink-0">
-                                Sincronizado via API
-                            </span>
+                            <div class="text-xs font-semibold text-blue-600 flex items-center gap-3">
+                                <span>{{ receita.especialidade }}</span>
+                                <span class="text-gray-300">|</span>
+                                <span class="text-gray-500 font-normal"><i class="pi pi-calendar"></i> {{ formatarData(receita.data_emissao) }}</span>
+                                <span class="text-gray-500 font-normal">Válida até {{ formatarData(receita.data_validade) }}</span>
+                            </div>
                         </div>
 
-                        <div class="mt-4 pt-4 border-t border-gray-50 flex items-center justify-end">
-                            <button @click="deletarReceita(receita.id)" class="text-xs font-medium text-red-500 hover:text-red-700">
-                                <i class="pi pi-trash animate-none"></i> Remover Histórico
+                        <div class="flex items-center gap-2 self-end sm:self-center">
+                            <button class="bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 text-xs font-semibold px-4 py-2 rounded-xl inline-flex items-center gap-1.5 shadow-sm transition">
+                                <i class="pi pi-eye text-xs"></i> Visualizar
+                            </button>
+                            <button @click="window.print()" class="bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 text-xs font-semibold px-4 py-2 rounded-xl inline-flex items-center gap-1.5 shadow-sm transition">
+                                <i class="pi pi-print text-xs"></i> Imprimir
+                            </button>
+                            <button @click="deletarReceita(receita.id)" class="text-gray-400 hover:text-red-500 text-xs p-2 transition ml-1" title="Remover histórico">
+                                <i class="pi pi-trash"></i>
                             </button>
                         </div>
                     </div>
+
+                    <div class="p-6 bg-gray-50/50 space-y-4">
+                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Medicamentos Prescritos:</h4>
+
+                        <div class="space-y-2">
+                            <div
+                                v-for="(med, idx) in receita.medicamentos"
+                                :key="idx"
+                                class="bg-white p-4 rounded-xl border border-gray-100 shadow-xs flex items-start justify-between"
+                            >
+                                <div>
+                                    <h5 class="text-sm font-bold text-gray-800">{{ med.nome }} <span class="text-gray-500 font-normal ml-1">{{ med.dosagem }}</span></h5>
+                                    <div class="text-xs text-gray-500 mt-1 flex flex-wrap gap-x-4 gap-y-1">
+                                        <span><strong>Dosagem:</strong> 1 {{ med.nome.toLowerCase() === 'doxiciclina' ? 'cápsula' : 'comprimido' }}</span>
+                                        <span><strong>Frequência:</strong> {{ med.frequencia }}</span>
+                                        <span><strong>Duração:</strong> {{ med.duracao }}</span>
+                                    </div>
+                                </div>
+                                <i class="pi pi-link text-blue-400 text-xs mt-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="receitasFiltradas.length === 0" class="bg-white rounded-2xl p-12 text-center border border-gray-200 shadow-sm">
+                    <i class="pi pi-info-circle text-3xl text-gray-300 mb-2 block"></i>
+                    <p class="text-gray-500 text-sm">Nenhuma prescrição encontrada para a categoria "{{ filtroSelecionado }}".</p>
                 </div>
             </div>
 

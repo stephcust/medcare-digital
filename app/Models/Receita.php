@@ -12,18 +12,20 @@ class Receita extends Model
     protected $fillable = [
         'user_id',
         'medico',
+        'especialidade',
         'medicamentos',
         'caminho_arquivo',
+        'status',
         'data_emissao',
+        'data_validade'
     ];
 
     protected $casts = [
         'data_emissao' => 'date',
+        'data_validade' => 'date',
+        'medicamentos' => 'array', // Converte o JSONB do Postgres em Array no PHP
     ];
 
-    /**
-     * Relacionamento: A receita pertence a um usuário.
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
