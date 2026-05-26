@@ -65,6 +65,11 @@ class User extends Authenticatable
         return $this->hasOne(Paciente::class, 'user_id');
     }
 
+    public function receitas()
+    {
+        return $this->hasMany(Receita::class, 'user_id');
+    }
+
     protected static function booted()
     {
         // Sempre que um usuário for criado, cria um paciente vinculado a ele

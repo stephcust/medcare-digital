@@ -70,3 +70,18 @@ Breadcrumbs::for('vacinacoes.index', function (BreadcrumbTrail $trail) {
         ],
     ]);
 });
+
+Breadcrumbs::for('receitas.index', function (BreadcrumbTrail $trail) {
+    $paciente = request()->route('paciente');
+
+    $trail->push('Minhas Receitas', route('receitas.index', $paciente), [
+        'actions' => [
+            [
+                'label' => 'Voltar',
+                'icon' => 'pi pi-arrow-left',
+                'url' => route('home'),
+                'variant' => 'secondary',
+            ],
+        ],
+    ]);
+});

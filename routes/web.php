@@ -4,6 +4,7 @@ use App\Http\Controllers\ExameController;
 use App\Http\Controllers\Exemplos\DashboardController;
 use App\Http\Controllers\Exemplos\PrimeVueController;
 use App\Http\Controllers\InicioController;
+use App\Http\Controllers\ReceitaController;
 use App\Http\Controllers\VacinacaoController;
 use App\Http\Controllers\Visitante\VisitanteController;
 use Illuminate\Support\Facades\Route;
@@ -34,7 +35,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/{paciente}/vacinacoes', [VacinacaoController::class, 'index'])->name('vacinacoes.index');
         Route::post('/{paciente}/vacinacoes', [VacinacaoController::class, 'store'])->name('vacinacoes.store');
         Route::delete('/vacinacoes/{vacinacao}', [VacinacaoController::class, 'destroy'])->name('vacinacoes.destroy');
+
+        Route::get('/{paciente}/receitas', [ReceitaController::class, 'index'])->name('receitas.index');
+        Route::delete('/receitas/{receita}', [ReceitaController::class, 'destroy'])->name('receitas.destroy');
     });
-
-
 });
