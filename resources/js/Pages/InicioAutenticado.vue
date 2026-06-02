@@ -57,7 +57,7 @@ defineProps({
                     <span class="text-sm font-semibold text-gray-700 text-center">Histórico PS</span>
                 </Link>
 
-                <Link href="#" class="flex flex-col items-center justify-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                <Link :href="route('meu.plano', paciente.id)" class="flex flex-col items-center justify-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                     <div class="w-16 h-16 bg-teal-50 rounded-full flex items-center justify-center mb-3">
                         <i class="pi pi-id-card text-2xl text-teal-600"></i>
                     </div>

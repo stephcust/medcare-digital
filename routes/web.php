@@ -6,6 +6,7 @@ use App\Http\Controllers\Exemplos\PrimeVueController;
 use App\Http\Controllers\GuiaMedicoController;
 use App\Http\Controllers\HistoricoClinicoController;
 use App\Http\Controllers\InicioController;
+use App\Http\Controllers\PlanoController;
 use App\Http\Controllers\ReceitaController;
 use App\Http\Controllers\VacinacaoController;
 use App\Http\Controllers\Visitante\VisitanteController;
@@ -50,4 +51,6 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     });
 
     Route::get('/historico-ps', [HistoricoClinicoController::class, 'index'])->name('historico.ps');
+
+    Route::get('/meu-plano', [PlanoController::class, 'index'])->name('meu.plano');
 });
