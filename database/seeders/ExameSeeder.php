@@ -11,12 +11,12 @@ class ExameSeeder extends Seeder
 {
     public function run(): void
     {
-        // Encontra o seu usuário cadastrado localmente
-        $user = User::first();
+        // // Encontra o seu usuário cadastrado localmente
+        // $user = User::where('id', 3)->get();
 
-        if (!$user) {
-            return;
-        }
+        // if (!$user) {
+        //     return;
+        // }
 
         // Criando um arquivo fake no Storage local simulando a recepção da API
         $fakePath = 'exames_pacientes/fake_laudo.pdf';
@@ -24,7 +24,7 @@ class ExameSeeder extends Seeder
 
         // 1. Exame simulado via API (Não visualizado pelo paciente ainda)
         Exame::create([
-            'user_id' => $user->id,
+            'user_id' => 3,
             'nome' => 'Hemograma Completo',
             'tipo' => 'Sangue',
             'laboratorio' => 'CliniCenter',
@@ -36,7 +36,7 @@ class ExameSeeder extends Seeder
 
         // 2. Exame antigo simulado via API (Já visualizado)
         Exame::create([
-            'user_id' => $user->id,
+            'user_id' => 3,
             'nome' => 'Raio-X de Tórax PA',
             'tipo' => 'Imagem',
             'laboratorio' => 'Imediata Diagnósticos',

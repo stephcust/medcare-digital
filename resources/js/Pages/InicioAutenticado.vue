@@ -36,7 +36,7 @@ defineProps({
                     <span class="text-sm font-semibold text-gray-700 text-center">Vacinas</span>
                 </Link>
 
-                <Link href="#" class="flex flex-col items-center justify-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                <Link :href="route('guia.inicio')" class="flex flex-col items-center justify-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                     <div class="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mb-3">
                         <i class="pi pi-map-marker text-2xl text-orange-600"></i>
                     </div>
@@ -50,7 +50,7 @@ defineProps({
                     <span class="text-sm font-semibold text-gray-700 text-center">Receitas</span>
                 </Link>
 
-                <Link href="#" class="flex flex-col items-center justify-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                <Link :href="route('historico.ps', paciente.id)" class="flex flex-col items-center justify-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                     <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-3">
                         <i class="pi pi-heart-fill text-2xl text-red-600"></i>
                     </div>

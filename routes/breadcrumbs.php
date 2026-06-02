@@ -85,3 +85,69 @@ Breadcrumbs::for('receitas.index', function (BreadcrumbTrail $trail) {
         ],
     ]);
 });
+
+Breadcrumbs::for('guia.inicio', function (BreadcrumbTrail $trail) {
+    $trail->push('Guia Médico', route('guia.inicio'), [
+        'actions' => [
+            [
+                'label' => 'Consultar Médicos',
+                'icon' => 'pi pi-user-md',
+                'url' => route('guia.medicos'),
+                'variant' => 'primary',
+            ],
+            [
+                'label' => 'Consultar Clínicas',
+                'icon' => 'pi pi-hospital',
+                'url' => route('guia.clinicas'),
+                'variant' => 'primary',
+            ],
+            [
+                'label' => 'Voltar',
+                'icon' => 'pi pi-arrow-left',
+                'url' => route('home'),
+                'variant' => 'secondary',
+            ],
+        ],
+    ]);
+});
+
+Breadcrumbs::for('guia.medicos', function (BreadcrumbTrail $trail) {
+    $trail->parent('guia.inicio');
+    $trail->push('Médicos', route('guia.medicos'), [
+        'actions' => [
+            [
+                'label' => 'Voltar',
+                'icon' => 'pi pi-arrow-left',
+                'url' => route('guia.inicio'),
+                'variant' => 'secondary',
+            ],
+        ],
+    ]);
+});
+
+Breadcrumbs::for('guia.clinicas', function (BreadcrumbTrail $trail) {
+    $trail->parent('guia.inicio');
+    $trail->push('Clínicas', route('guia.clinicas'), [
+        'actions' => [
+            [
+                'label' => 'Voltar',
+                'icon' => 'pi pi-arrow-left',
+                'url' => route('guia.inicio'),
+                'variant' => 'secondary',
+            ],
+        ],
+    ]);
+});
+
+Breadcrumbs::for('historico.ps', function (BreadcrumbTrail $trail) {
+    $trail->push('Histórico Clínico', route('historico.ps'), [
+        'actions' => [
+            [
+                'label' => 'Voltar',
+                'icon' => 'pi pi-arrow-left',
+                'url' => route('home'),
+                'variant' => 'secondary',
+            ],
+        ],
+    ]);
+});
