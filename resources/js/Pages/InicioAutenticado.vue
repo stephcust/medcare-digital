@@ -58,6 +58,13 @@ import { Link } from '@inertiajs/vue3';
                     </div>
                     <span class="text-sm font-semibold text-gray-700 text-center">Meu Plano</span>
                 </Link>
+
+                <Link href="/whatsapp-simulador" class="flex flex-col items-center justify-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    <div class="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-3">
+                      <i class="pi pi-whatsapp text-2xl text-emerald-600"></i>
+                    </div>
+                    <span class="text-sm font-semibold text-gray-700 text-center">Assistente IA</span>
+                </Link>
             </div>
 
             <div class="mt-8 bg-blue-600 rounded-3xl p-6 text-white shadow-lg overflow-hidden relative">
