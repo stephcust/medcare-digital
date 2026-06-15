@@ -80,6 +80,13 @@ import { Link } from '@inertiajs/vue3';
                 <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-blue-500 rounded-full opacity-50"></div>
             </div>
 
+            <Link href="/jornada-inteligente" class="flex flex-col items-center justify-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div class="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mb-3">
+                 <i class="pi pi-sparkles text-2xl text-indigo-600"></i>
+              </div>
+              <span class="text-sm font-semibold text-gray-700 text-center">Jornada Inteligente</span>
+            </Link>
+
         </div>
     </AppLayout>
 </template>

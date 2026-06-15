@@ -8,6 +8,7 @@ use App\Http\Controllers\Visitante\VisitanteController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\WhatsappSimulador\WhatsappSimuladorController;
+use App\Http\Controllers\JornadaInteligente\JornadaInteligenteController;
 
 //* Rotas de visitantes - Sem autenticação
 Route::get('/', [VisitanteController::class, 'landingPage'])->name('landingPage');
@@ -35,4 +36,13 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 
     Route::post('/whatsapp-simulador/enviar', [WhatsappSimuladorController::class, 'enviar'])
     ->name('whatsapp-simulador.enviar');
+
+    Route::get('/jornada-inteligente', [JornadaInteligenteController::class, 'index'])
+    ->name('jornada-inteligente.index');
+
+    Route::post('/jornada-inteligente/relatos', [JornadaInteligenteController::class, 'store'])
+    ->name('jornada-inteligente.relatos.store');
+
+    Route::post('/jornada-inteligente/resumo', [JornadaInteligenteController::class, 'gerarResumo'])
+    ->name('jornada-inteligente.resumo');
 });

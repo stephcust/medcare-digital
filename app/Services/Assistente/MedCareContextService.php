@@ -18,6 +18,7 @@ class MedCareContextService
             "Resumo dos dados encontrados no MedCare:",
         ];
 
+        $this->adicionarRegistrosDoUsuario($linhas, 'Relatos do paciente / Jornada Inteligente', 'relatos_saude', $user);
         $this->adicionarRegistrosDoUsuario($linhas, 'Carteira digital / Plano de saúde', 'carteira_digital', $user);
         $this->adicionarRegistrosDoUsuario($linhas, 'Exames', 'exames', $user);
         $this->adicionarRegistrosDoUsuario($linhas, 'Vacinas', 'vacinas', $user);
@@ -177,11 +178,15 @@ class MedCareContextService
             'id',
             'nome',
             'titulo',
+            'categoria',
+            'relato',
+            'data_ocorrencia',
+            'incluir_no_resumo',
             'tipo',
             'descricao',
             'status',
             'origem',
-
+            
             'nome_exame',
             'laboratorio',
             'data_realizacao',
@@ -215,6 +220,12 @@ class MedCareContextService
             'data_consulta',
             'created_at',
             'updated_at',
+
+            'categoria',
+            'relato',
+            'data_ocorrencia',
+            'incluir_no_resumo',
+        
         ];
 
         return array_values(array_intersect($permitidas, $colunas));
