@@ -5,17 +5,18 @@ namespace App\Services\Assistente;
 use App\Models\User;
 use App\Services\IA\GeminiService;
 
+
 class AssistenteMedCareService
 {
     public function __construct(
-        private GeminiService $geminiService
-    ) {
-    }
+    private GeminiService $geminiService,
+    private MedCareContextService $medCareContextService
+) {
+}
 
     public function responder(User $user, string $mensagemUsuario): string
     {
-        $contextoUsuario = $this->montarContextoUsuario($user);
-
+        $contextoUsuario = $this->medCareContextService->montar($user);
         $respostaGemini = $this->geminiService->gerarResposta(
             $mensagemUsuario,
             $contextoUsuario
@@ -28,13 +29,7 @@ class AssistenteMedCareService
         return $this->responderFallback($user, $mensagemUsuario);
     }
 
-    private function montarContextoUsuario(User $user): string
-    {
-        return "Nome do usuário: {$user->name}\n"
-            . "E-mail do usuário: {$user->email}\n"
-            . "O sistema possui módulos de exames, vacinas, guia médico, histórico de pronto-socorro, receitas e dados do plano de saúde.\n"
-            . "Neste momento, use apenas as informações disponíveis neste contexto e não invente dados específicos que não foram informados.";
-    }
+
 
     private function responderFallback(User $user, string $mensagemUsuario): string
     {
