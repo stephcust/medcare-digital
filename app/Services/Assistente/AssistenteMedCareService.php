@@ -5,18 +5,23 @@ namespace App\Services\Assistente;
 use App\Models\User;
 use App\Services\IA\GeminiService;
 
-
 class AssistenteMedCareService
 {
     public function __construct(
-    private GeminiService $geminiService,
-    private MedCareContextService $medCareContextService
-) {
-}
+        private GeminiService $geminiService,
+        private MedCareContextService $medCareContextService,
+        private LembreteChatService $lembreteChatService)
+        {}
+    public function responder(User $user, string $mensagemUsuario): string{
 
-    public function responder(User $user, string $mensagemUsuario): string
-    {
+        $respostaLembrete = $this->lembreteChatService->processar($user, $mensagemUsuario);
+
+        if ($respostaLembrete !== null) {
+            return $respostaLembrete;
+        }
+
         $contextoUsuario = $this->medCareContextService->montar($user);
+
         $respostaGemini = $this->geminiService->gerarResposta(
             $mensagemUsuario,
             $contextoUsuario
@@ -28,8 +33,6 @@ class AssistenteMedCareService
 
         return $this->responderFallback($user, $mensagemUsuario);
     }
-
-
 
     private function responderFallback(User $user, string $mensagemUsuario): string
     {
@@ -109,7 +112,8 @@ class AssistenteMedCareService
     private function responderAjudaInicial(User $user): string
     {
         return "Olá! Sou o assistente inteligente do MedCare Digital.\n\n"
-            . "Posso te ajudar com resumo da saúde, vacinas, preparo para consulta, dados do plano e Guia Médico.\n\n"
+            . "Posso te ajudar com resumo da saúde, vacinas, preparo para consulta, dados do plano, Guia Médico e lembretes.\n\n"
+            . "Exemplo: \"me lembre de tomar remédio amanhã às 8h\".\n\n"
             . "Lembrete: minhas orientações não substituem atendimento médico profissional.";
     }
 }
