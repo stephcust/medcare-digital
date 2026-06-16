@@ -47,15 +47,15 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::delete('/receitas/{receita}', [ReceitaController::class, 'destroy'])->name('receitas.destroy');
     });
 
-    Route::prefix('guia-medico')->name('guia.')->group(function () {
-        Route::get('/', [GuiaMedicoController::class, 'inicio'])->name('inicio');
-        Route::get('/medicos', [GuiaMedicoController::class, 'medicos'])->name('medicos');
-        Route::get('/clinicas', [GuiaMedicoController::class, 'clinicas'])->name('clinicas');
-    });
+    // Route::prefix('guia-medico')->name('guia.')->group(function () {
+    //     Route::get('/', [GuiaMedicoController::class, 'inicio'])->name('inicio');
+    //     Route::get('/medicos', [GuiaMedicoController::class, 'medicos'])->name('medicos');
+    //     Route::get('/clinicas', [GuiaMedicoController::class, 'clinicas'])->name('clinicas');
+    // });
+    // Route::get('/meu-plano', [PlanoController::class, 'index'])->name('meu.plano');
 
     Route::get('/historico-ps', [HistoricoClinicoController::class, 'index'])->name('historico.ps');
 
-    Route::get('/meu-plano', [PlanoController::class, 'index'])->name('meu.plano');
 
     Route::get('/whatsapp-simulador', [WhatsappSimuladorController::class, 'index'])
         ->name('whatsapp-simulador.index');
