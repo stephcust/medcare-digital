@@ -66,11 +66,11 @@ const formatarData = (dataStr) => {
                             </span> -->
                         </div>
 
-                        <!-- <div class="mt-4 pt-4 border-t border-gray-50 flex items-center justify-end">
+                        <div class="mt-4 pt-4 border-t border-gray-50 flex items-center justify-end">
                             <button @click="deletarVacina(vacina.id)" class="text-xs font-medium text-red-500 hover:text-red-700">
                                 <i class="pi pi-trash"></i> Excluir Registro
                             </button>
-                        </div> -->
+                        </div>
                     </div>
                 </div>
             </div>

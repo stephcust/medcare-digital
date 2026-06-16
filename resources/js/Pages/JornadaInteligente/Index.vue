@@ -49,10 +49,20 @@ const gerarResumo = async () => {
 }
 
 const formatarData = (dataString) => {
-    if (!dataString) return ''
-    const [ano, mes, dia] = dataString.split('-')
-    return `${dia}/${mes}/${ano}`
-}
+    if (!dataString) return '';
+    
+    const partesGerais = dataString.replace('T', ' ').split(' ');
+    const dataPura = partesGerais[0]; 
+    const horaPura = partesGerais[1] ? partesGerais[1].substring(0, 5) : '';
+
+    const partesData = dataPura.split('-');
+    if (partesData.length !== 3) return dataString;
+    
+    const [ano, mes, dia] = partesData;
+    const dataFormatada = `${dia}/${mes}/${ano}`;
+
+    return horaPura ? `${dataFormatada} às ${horaPura}` : dataFormatada;
+};
 </script>
 
 <template>

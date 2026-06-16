@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\RelatoSaude;
 use App\Services\Assistente\MedCareContextService;
 use App\Services\IA\GeminiService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -24,28 +25,34 @@ class JornadaInteligenteController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $data = $request->validate([
-            'categoria' => ['required', 'string', 'max:50'],
-            'titulo' => ['nullable', 'string', 'max:150'],
-            'relato' => ['required', 'string', 'max:2000'],
-            'data_ocorrencia' => ['nullable', 'date'],
-            'incluir_no_resumo' => ['boolean'],
-        ]);
+{
+    $data = $request->validate([
+        'categoria' => ['required', 'string', 'max:50'],
+        'titulo' => ['nullable', 'string', 'max:150'],
+        'relato' => ['required', 'string', 'max:2000'],
+        'data_ocorrencia' => ['nullable', 'date'],
+        'incluir_no_resumo' => ['boolean'],
+    ]);
 
-        RelatoSaude::create([
-            'user_id' => $request->user()->id,
-            'categoria' => $data['categoria'],
-            'titulo' => $data['titulo'] ?? null,
-            'relato' => $data['relato'],
-            'data_ocorrencia' => $data['data_ocorrencia'] ?? now()->toDateString(),
-            'incluir_no_resumo' => $data['incluir_no_resumo'] ?? true,
-        ]);
-
-        return redirect()
-            ->route('jornada-inteligente.index')
-            ->with('success', 'Registro de sintoma salvo na sua Jornada.');
+    if (!empty($data['data_ocorrencia'])) {
+        $dataOcorrencia = Carbon::parse($data['data_ocorrencia'] . ' ' . now()->toTimeString())->toDateTimeString();
+    } else {
+        $dataOcorrencia = now()->toDateTimeString();
     }
+
+    RelatoSaude::create([
+        'user_id' => $request->user()->id,
+        'categoria' => $data['categoria'],
+        'titulo' => $data['titulo'] ?? null,
+        'relato' => $data['relato'],
+        'data_ocorrencia' => $dataOcorrencia, // Passa a salvar o Data + Horário
+        'incluir_no_resumo' => $data['incluir_no_resumo'] ?? true,
+    ]);
+
+    return redirect()
+        ->route('jornada-inteligente.index')
+        ->with('success', 'Registro de sintoma salvo na sua Jornada.');
+}
 
     public function gerarResumo(
         Request $request,
