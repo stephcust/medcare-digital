@@ -114,7 +114,7 @@ class LembreteChatService
 
             $resposta .= "{$lembrete->id}. {$lembrete->titulo}\n";
             $resposta .= "Tipo: {$this->nomeTipo($lembrete->tipo)}\n";
-            $resposta .= "Quando: {$dataHora}\n\n";
+            $resposta .= "Quando? {$dataHora}\n\n";
         }
 
         $resposta .= "Para concluir um lembrete, envie: \"concluir lembrete 1\".";

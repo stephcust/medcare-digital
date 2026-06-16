@@ -44,7 +44,7 @@ class JornadaInteligenteController extends Controller
 
         return redirect()
             ->route('jornada-inteligente.index')
-            ->with('success', 'Relato salvo com sucesso.');
+            ->with('success', 'Registro de sintoma salvo na sua Jornada.');
     }
 
     public function gerarResumo(
@@ -55,24 +55,20 @@ class JornadaInteligenteController extends Controller
         $contexto = $medCareContextService->montar($request->user());
 
         $mensagem = "
-Gere um resumo objetivo para o médico com base nos dados cadastrados no MedCare.
+Gere um Sumário de Preparação Clínico estruturado e objetivo para o médico com base nos dados e na linha do tempo do MedCare.
 
-O resumo deve:
-- separar dados cadastrados e relatos do próprio paciente;
-- destacar sintomas ou ocorrências relatadas pelo usuário;
-- citar exames, vacinas, plano, receitas e histórico apenas se existirem no contexto;
-- não inventar dados;
-- não dar diagnóstico;
-- não prescrever medicamentos;
-- deixar claro que os relatos foram informados pelo próprio paciente.
-
-Monte em formato organizado, com tópicos curtos.
+O documento gerado deve:
+- Organizar de forma limpa as queixas do paciente e sintomas históricos informados por ele;
+- Cruzar cronologicamente laudos de exames, receitas ou passagens por PS encontrados no contexto;
+- Criar uma seção de sugestões de perguntas pertinentes que o paciente pode fazer ao médico;
+- Não tentar prever diagnósticos ou prescrever remédios;
+- Manter o foco estrito em simplificar e resumir o histórico para otimizar o tempo da consulta médica.
 ";
 
         $resumo = $geminiService->gerarResposta($mensagem, $contexto);
 
         return response()->json([
-            'resumo' => $resumo ?: 'Não consegui gerar o resumo agora. Tente novamente em alguns instantes.',
+            'resumo' => $resumo ?: 'Não consegui compilar o sumário agora. Tente novamente em alguns instantes.'
         ]);
     }
 }

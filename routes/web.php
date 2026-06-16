@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\WhatsappSimulador\WhatsappSimuladorController;
 use App\Http\Controllers\JornadaInteligente\JornadaInteligenteController;
+use App\Http\Controllers\LembreteController;
+use App\Http\Controllers\PreparadorConsultaController;
 
 //* Rotas de visitantes - Sem autenticação
 Route::get('/', [VisitanteController::class, 'landingPage'])->name('landingPage');
@@ -25,7 +27,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::get('home')->name('home')->uses([InicioController::class, 'inicioAutenticado']);
     // Route::get('teste_vue')->name('teste_vue')->uses([PrimeVueController::class, 'index']);
     Route::get('url_errada', fn() => abort(404))->name('url_errada');
-    Route::get('relatorio-exemplo', fn() => abort(404))->name('relatorio.exemplo');
+    // Route::get('relatorio-exemplo', fn() => abort(404))->name('relatorio.exemplo');
     // Route::prefix('exemplos')->name('exemplos.')->group(function () {
     //     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     //     Route::get('primevue', [PrimeVueController::class, 'index'])->name('primevue');
@@ -61,12 +63,18 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::post('/whatsapp-simulador/enviar', [WhatsappSimuladorController::class, 'enviar'])
         ->name('whatsapp-simulador.enviar');
 
-    Route::get('/jornada-inteligente', [JornadaInteligenteController::class, 'index'])
-        ->name('jornada-inteligente.index');
+    Route::prefix('jornada-inteligente')->name('jornada-inteligente.')->group(function () {
+        Route::get('/', [JornadaInteligenteController::class, 'index'])->name('index');
+        Route::post('/relatos', [JornadaInteligenteController::class, 'store'])->name('relatos.store');
+        Route::post('/resumo', [JornadaInteligenteController::class, 'gerarResumo'])->name('resumo');
+    });
 
-    Route::post('/jornada-inteligente/relatos', [JornadaInteligenteController::class, 'store'])
-        ->name('jornada-inteligente.relatos.store');
+    // Rotas do módulo de Lembretes
+    Route::get('/lembretes', [LembreteController::class, 'index'])->name('lembretes.index');
+    Route::post('/lembretes', [LembreteController::class, 'store'])->name('lembretes.store');
+    Route::delete('/lembretes/{lembrete}', [LembreteController::class, 'destroy'])->name('lembretes.destroy');
 
-    Route::post('/jornada-inteligente/resumo', [JornadaInteligenteController::class, 'gerarResumo'])
-        ->name('jornada-inteligente.resumo');
+    // Rotas do módulo Preparador de Consulta
+    Route::get('/preparador-consulta', [PreparadorConsultaController::class, 'index'])->name('preparador.index');
+    Route::post('/preparador-consulta', [PreparadorConsultaController::class, 'gerar'])->name('preparador.gerar');
 });

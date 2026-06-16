@@ -21,6 +21,7 @@ class GeminiService
 
         try {
             $response = Http::timeout(30)
+                ->withoutVerifying()
                 ->withHeaders([
                     'x-goog-api-key' => $apiKey,
                     'Content-Type' => 'application/json',
@@ -71,6 +72,59 @@ class GeminiService
                 'message' => $e->getMessage(),
             ]);
 
+            return null;
+        }
+    }
+
+    public function analisarDocumento(string $caminhoArquivo, string $mimeType, string $promptInstrucao): ?string
+    {
+        $apiKey = config('services.gemini.key');
+        $model = config('services.gemini.model', 'gemini-2.5-flash');
+
+        if (!$apiKey) return null;
+
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent";
+
+        // Converte o arquivo físico para base64 binário estruturado que a API exige
+        $dadosBase64 = base64_encode(file_get_contents($caminhoArquivo));
+
+        try {
+            $response = Http::timeout(45)
+                ->withoutVerifying() // Ignora problemas de SSL locais
+                ->withHeaders([
+                    'x-goog-api-key' => $apiKey,
+                    'Content-Type' => 'application/json',
+                ])
+                ->post($url, [
+                    'contents' => [
+                        [
+                            'parts' => [
+                                [
+                                    'inlineData' => [
+                                        'mimeType' => $mimeType,
+                                        'data' => $dadosBase64
+                                    ]
+                                ],
+                                [
+                                    'text' => $promptInstrucao
+                                ]
+                            ]
+                        ]
+                    ],
+                    // Força a resposta da IA a vir estritamente como formato JSON limpo
+                    'generationConfig' => [
+                        'responseMimeType' => 'application/json'
+                    ]
+                ]);
+
+            if ($response->successful()) {
+                return $response->json('candidates.0.content.parts.0.text');
+            }
+
+            Log::error('Erro na análise multimodal Gemini: ' . $response->body());
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Exceção multimodal Gemini: ' . $e->getMessage());
             return null;
         }
     }
