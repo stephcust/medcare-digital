@@ -3,50 +3,151 @@
 use Diglactic\Breadcrumbs\Breadcrumbs;
 use Diglactic\Breadcrumbs\Generator as BreadcrumbTrail;
 
-// APP
 Breadcrumbs::before(function (BreadcrumbTrail $trail) {
-    $appName = config('app.name');
-    $trail->push($appName, route('landingPage'));
+    $trail->push(config('app.name'), route('home'));
 });
 
-// APP > [Início]
-Breadcrumbs::for('dashboard', function (BreadcrumbTrail $trail) {
-    $trail->push('Início', route('dashboard'));
+Breadcrumbs::for('exames.index', function (BreadcrumbTrail $trail) {
+    $trail->push('Meus Exames', route('exames.index'), [
+        'actions' => [
+            [
+                'label' => 'Anexar exame',
+                'icon' => 'pi pi-plus-circle',
+                'url' => route('exames.create'),
+                'variant' => 'primary',
+            ],
+            [
+                'label' => 'Voltar',
+                'icon' => 'pi pi-arrow-left',
+                'url' => route('home'),
+                'variant' => 'secondary',
+            ],
+        ],
+    ]);
 });
 
-// APP > [Exemplos]
-Breadcrumbs::for('exemplos.', function (BreadcrumbTrail $trail) {
-    $trail->push('Exemplos');
+Breadcrumbs::for('exames.create', function (BreadcrumbTrail $trail) {
+    $trail->parent('exames.index');
+    $trail->push('Anexar Exame', route('exames.create'), [
+        'actions' => [
+            [
+                'label' => 'Voltar',
+                'icon' => 'pi pi-arrow-left',
+                'url' => route('exames.index'),
+                'variant' => 'secondary',
+            ],
+        ],
+    ]);
 });
 
-// APP > Exemplos > [Dashboard]
-Breadcrumbs::for('exemplos.dashboard', function (BreadcrumbTrail $trail) {
-    $trail->parent('exemplos.');
-    $trail->push('Dashboard', route('exemplos.dashboard'));
+Breadcrumbs::for('exames.show', function (BreadcrumbTrail $trail) {
+    $exame = request()->route('exame');
+
+    $trail->parent('exames.index');
+    $trail->push($exame?->nome ?? 'Detalhes do Exame', route('exames.show', $exame), [
+        'actions' => [
+            [
+                'label' => 'Voltar',
+                'icon' => 'pi pi-arrow-left',
+                'url' => route('exames.index'),
+                'variant' => 'secondary',
+            ],
+        ],
+    ]);
 });
 
-// APP > Exemplos > [Dashboard]
-Breadcrumbs::for('exemplos.primevue', function (BreadcrumbTrail $trail) {
-    $trail->parent('exemplos.');
-    $trail->push('PrimeVue', route('exemplos.primevue'));
+Breadcrumbs::for('vacinacoes.index', function (BreadcrumbTrail $trail) {
+    $paciente = request()->route('paciente');
+
+    $trail->push('Minhas Vacinas', route('vacinacoes.index', $paciente), [
+        'actions' => [
+            [
+                'label' => 'Voltar',
+                'icon' => 'pi pi-arrow-left',
+                'url' => route('home'),
+                'variant' => 'secondary',
+            ],
+        ],
+    ]);
 });
 
-// APP > Exemplos > [Tarefas]
-Breadcrumbs::for('tarefa.index', function (BreadcrumbTrail $trail) {
-    $trail->parent('exemplos.');
-    $trail->push('Listar Tarefas', route('tarefa.index'));
+Breadcrumbs::for('receitas.index', function (BreadcrumbTrail $trail) {
+    $paciente = request()->route('paciente');
+
+    $trail->push('Minhas Receitas', route('receitas.index', $paciente), [
+        'actions' => [
+            [
+                'label' => 'Voltar',
+                'icon' => 'pi pi-arrow-left',
+                'url' => route('home'),
+                'variant' => 'secondary',
+            ],
+        ],
+    ]);
 });
-Breadcrumbs::for('tarefa.create', function (BreadcrumbTrail $trail) {
-    $trail->parent('tarefa.index');
-    $trail->push('Nova Tarefa', route('tarefa.create'));
+
+Breadcrumbs::for('guia.inicio', function (BreadcrumbTrail $trail) {
+    $trail->push('Guia Médico', route('guia.inicio'), [
+        'actions' => [
+            [
+                'label' => 'Consultar Médicos',
+                'icon' => 'pi pi-user-md',
+                'url' => route('guia.medicos'),
+                'variant' => 'primary',
+            ],
+            [
+                'label' => 'Consultar Clínicas',
+                'icon' => 'pi pi-hospital',
+                'url' => route('guia.clinicas'),
+                'variant' => 'primary',
+            ],
+            [
+                'label' => 'Voltar',
+                'icon' => 'pi pi-arrow-left',
+                'url' => route('home'),
+                'variant' => 'secondary',
+            ],
+        ],
+    ]);
 });
-Breadcrumbs::for('tarefa.edit', function (BreadcrumbTrail $trail) {
-    $tarefa = request()->route()->parameter('tarefa');
-    $trail->parent('tarefa.index');
-    $trail->push('Editar Tarefa', route('tarefa.edit', $tarefa));
+
+Breadcrumbs::for('guia.medicos', function (BreadcrumbTrail $trail) {
+    $trail->parent('guia.inicio');
+    $trail->push('Médicos', route('guia.medicos'), [
+        'actions' => [
+            [
+                'label' => 'Voltar',
+                'icon' => 'pi pi-arrow-left',
+                'url' => route('guia.inicio'),
+                'variant' => 'secondary',
+            ],
+        ],
+    ]);
 });
-Breadcrumbs::for('tarefa.show', function (BreadcrumbTrail $trail) {
-    $tarefa = request()->route()->parameter('tarefa');
-    $trail->parent('tarefa.index');
-    $trail->push('Ver Tarefa', route('tarefa.show', $tarefa));
+
+Breadcrumbs::for('guia.clinicas', function (BreadcrumbTrail $trail) {
+    $trail->parent('guia.inicio');
+    $trail->push('Clínicas', route('guia.clinicas'), [
+        'actions' => [
+            [
+                'label' => 'Voltar',
+                'icon' => 'pi pi-arrow-left',
+                'url' => route('guia.inicio'),
+                'variant' => 'secondary',
+            ],
+        ],
+    ]);
+});
+
+Breadcrumbs::for('historico.ps', function (BreadcrumbTrail $trail) {
+    $trail->push('Histórico Clínico', route('historico.ps'), [
+        'actions' => [
+            [
+                'label' => 'Voltar',
+                'icon' => 'pi pi-arrow-left',
+                'url' => route('home'),
+                'variant' => 'secondary',
+            ],
+        ],
+    ]);
 });

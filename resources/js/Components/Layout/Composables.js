@@ -7,7 +7,7 @@ const app = useApp();
 
 /** @type {{ items: [], visible: boolean, autoReopen: boolean, mostrarSideBarMenu: boolean }} */
 const sidebar = reactive({
-    items: computed(() => app.heimdall?.menus?.left_sidebar ?? []),
+    items: [],
     visible: false,
     autoReopen: false,
     mostrarSideBarMenu: computed(() => app.sidebar),

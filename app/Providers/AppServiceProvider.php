@@ -2,8 +2,9 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,6 +21,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Schema::defaultStringLength(191);
+        $host = request()->getHost();
+        $isLocalHost = in_array($host, ['localhost', '127.0.0.1'], true);
+
+        // Force HTTPS in real production, but keep Laravel's local server on HTTP.
+        if (!$isLocalHost && app()->environment('production') && Str::startsWith(config('app.url'), 'https://')) {
+            URL::forceScheme('https');
+        }
     }
 }

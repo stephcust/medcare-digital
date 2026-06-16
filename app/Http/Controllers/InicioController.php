@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Exame;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -14,6 +15,16 @@ class InicioController extends Controller
     public function inicioAutenticado()
     {
         // dd(Session::all());
-        return Inertia::render("InicioAutenticado");
+        $examesPendentes = Exame::where('user_id', auth()->id())
+        ->where('visualizado', false)
+        ->with(['user']) // Carrega relacionamento se necessário
+        ->orderBy('data_realizacao', 'desc')
+        ->get();
+
+        $paciente = auth()->user()->paciente;
+        return Inertia::render("InicioAutenticado", [
+            'ultimoExamePendente' => $examesPendentes->first(),
+            'paciente' => $paciente
+        ]);
     }
 }

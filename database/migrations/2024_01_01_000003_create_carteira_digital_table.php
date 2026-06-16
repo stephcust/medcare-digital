@@ -7,16 +7,6 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        // Exames
-        Schema::create('exames', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('titulo');
-            $table->string('instituicao');
-            $table->string('caminho_arquivo');
-            $table->date('data_realizacao');
-            $table->timestamps();
-        });
 
         // Receitas Médicas
         Schema::create('receitas', function (Blueprint $table) {
@@ -26,16 +16,6 @@ return new class extends Migration {
             $table->text('medicamentos');
             $table->string('caminho_arquivo')->nullable();
             $table->date('data_emissao');
-            $table->timestamps();
-        });
-
-        // Vacinas
-        Schema::create('vacinas', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('nome_vacina');
-            $table->integer('dose');
-            $table->date('data_aplicacao');
             $table->timestamps();
         });
 

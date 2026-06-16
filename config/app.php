@@ -24,7 +24,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', 'MedCare Digital'),
     'version' => $versao,
     'system_key' => env('APP_SYSTEM_KEY', 'laravel'),
 

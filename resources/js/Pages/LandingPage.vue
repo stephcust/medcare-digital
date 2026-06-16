@@ -3,6 +3,7 @@ import PublicLayout from '@/Layouts/PublicLayout.vue';
 import Button from 'primevue/button';
 import Divider from 'primevue/divider';
 import { Link } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 </script>
 
@@ -30,7 +31,7 @@ import { Link } from '@inertiajs/vue3';
                     </div>
                 </div>
                 <div class="flex-1 overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1576091160550-2173dbc999ef?q=80&w=2070&auto=format&fit=crop"
+                    <img src='/storage/image-medcare1.jpg'
                         alt="MedCare Saúde Digital"
                         class="h-full w-full object-cover lg:[clip-path:polygon(12%_0,100%_0%,100%_100%,0_100%)]" />
                 </div>

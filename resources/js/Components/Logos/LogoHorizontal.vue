@@ -6,10 +6,10 @@ defineProps({
 
 <template>
     <div class="flex gap-2 items-center">
-        <div>
-            <img class="w-10" src="/storage/medcare_logo.png" alt="MedCare Digital" />
+        <div class="bg-white rounded-md p-1 shadow-sm">
+            <img class="w-10" src="/storage/logo_medcare2.png" alt="MedCare Digital" />
         </div>
-        <div class="flex flex-col text-center" :class="{
+        <div class="hidden flex-col text-center drop-shadow-sm sm:flex" :class="{
             'text-white': !dark,
             'text-black': dark,
         }">

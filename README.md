@@ -280,5 +280,18 @@ resources/js/Components/Produto/
     └── ProdutoList.js
 ```
 
+## 🚀 Fluxo de Trabalho (Git Workflow)
+
+A gestão de ramificações (branches) é crítica para o sucesso do projeto. Adotamos um modelo de desenvolvimento baseado em integração contínua na branch de desenvolvimento.
+
+### 📍 Regra de Ouro: Branch `develop`
+* **Obrigatório:** Todo o desenvolvimento de novas funcionalidades, correções de bugs e melhorias deve ser feito na branch **`develop`**.
+* **Proibido:** Nunca realize commits diretos na branch **`master`**. A `master` é reservada exclusivamente para o código estável em produção.
+* **Processo:**
+    1. Certifique-se de estar na develop: `git checkout develop`
+    2. Puxe as últimas alterações: `git pull origin develop`
+    3. Crie sua branch de recurso (opcional): `git checkout -b feature/nome-da-funcionalidade`
+    4. Ao finalizar, realize o merge ou abra um Pull Request para a **`develop`**.
+
 Para implementação de formulário utilizar **OBRIGATORIAMENTE** o useForm utilizando Helpers
 <a href="https://inertiajs.com/forms#form-helper">https://inertiajs.com/forms#form-helper</a>

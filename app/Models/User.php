@@ -18,14 +18,6 @@ class User extends Authenticatable
     use Notifiable;
     use TwoFactorAuthenticatable;
 
-    protected $connection;
-
-    public function __construct(array $attributes = [])
-    {
-        parent::__construct($attributes);
-        $this->connection = env('VITE_USER_CONNECTION', 'mariadb');
-    }
-
     protected $fillable = [
         'cpf',
         'name',
@@ -66,5 +58,27 @@ class User extends Authenticatable
     public function notifications()
     {
         return $this->morphMany(Notification::class, 'notifiable')->orderBy('created_at', 'desc');
+    }
+
+    public function paciente()
+    {
+        return $this->hasOne(Paciente::class, 'user_id');
+    }
+
+    public function receitas()
+    {
+        return $this->hasMany(Receita::class, 'user_id');
+    }
+
+    protected static function booted()
+    {
+        // Sempre que um usuário for criado, cria um paciente vinculado a ele
+        static::created(function ($user) {
+            $user->paciente()->create([
+                // Como passamos a usar o relacionamento correto, o Laravel
+                // injeta o 'user_id' automaticamente aqui.
+                // Os demais campos (rg, genero, etc) nascerão como null.
+            ]);
+        });
     }
 }
