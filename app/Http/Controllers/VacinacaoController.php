@@ -48,7 +48,6 @@ class VacinacaoController extends Controller
         ]);
 
         $dadosValidados['paciente_id'] = $paciente->id;
-        $dadosValidados['usuario_id'] = auth()->id();
 
         // Se o usuário estiver submetendo um comprovante físico/digital
         if ($request->hasFile('comprovante')) {
