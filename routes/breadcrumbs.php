@@ -7,6 +7,7 @@ Breadcrumbs::before(function (BreadcrumbTrail $trail) {
     $trail->push(config('app.name'), route('home'));
 });
 
+// --- MÓDULO DE EXAMES ---
 Breadcrumbs::for('exames.index', function (BreadcrumbTrail $trail) {
     $trail->push('Meus Exames', route('exames.index'), [
         'actions' => [
@@ -56,6 +57,7 @@ Breadcrumbs::for('exames.show', function (BreadcrumbTrail $trail) {
     ]);
 });
 
+// --- MÓDULO DE VACINAÇÕES ---
 Breadcrumbs::for('vacinacoes.index', function (BreadcrumbTrail $trail) {
     $paciente = request()->route('paciente');
 
@@ -71,11 +73,18 @@ Breadcrumbs::for('vacinacoes.index', function (BreadcrumbTrail $trail) {
     ]);
 });
 
+// --- MÓDULO DE RECEITAS MÉDICAS (ATUALIZADO) ---
 Breadcrumbs::for('receitas.index', function (BreadcrumbTrail $trail) {
     $paciente = request()->route('paciente');
 
     $trail->push('Minhas Receitas', route('receitas.index', $paciente), [
         'actions' => [
+            [
+                'label' => 'Anexar receita',
+                'icon' => 'pi pi-plus-circle',
+                'url' => route('receitas.create', $paciente),
+                'variant' => 'primary',
+            ],
             [
                 'label' => 'Voltar',
                 'icon' => 'pi pi-arrow-left',
@@ -86,59 +95,23 @@ Breadcrumbs::for('receitas.index', function (BreadcrumbTrail $trail) {
     ]);
 });
 
-// Breadcrumbs::for('guia.inicio', function (BreadcrumbTrail $trail) {
-//     $trail->push('Guia Médico', route('guia.inicio'), [
-//         'actions' => [
-//             [
-//                 'label' => 'Consultar Médicos',
-//                 'icon' => 'pi pi-user-md',
-//                 'url' => route('guia.medicos'),
-//                 'variant' => 'primary',
-//             ],
-//             [
-//                 'label' => 'Consultar Clínicas',
-//                 'icon' => 'pi pi-hospital',
-//                 'url' => route('guia.clinicas'),
-//                 'variant' => 'primary',
-//             ],
-//             [
-//                 'label' => 'Voltar',
-//                 'icon' => 'pi pi-arrow-left',
-//                 'url' => route('home'),
-//                 'variant' => 'secondary',
-//             ],
-//         ],
-//     ]);
-// });
+Breadcrumbs::for('receitas.create', function (BreadcrumbTrail $trail) {
+    $paciente = request()->route('paciente');
 
-// Breadcrumbs::for('guia.medicos', function (BreadcrumbTrail $trail) {
-//     $trail->parent('guia.inicio');
-//     $trail->push('Médicos', route('guia.medicos'), [
-//         'actions' => [
-//             [
-//                 'label' => 'Voltar',
-//                 'icon' => 'pi pi-arrow-left',
-//                 'url' => route('guia.inicio'),
-//                 'variant' => 'secondary',
-//             ],
-//         ],
-//     ]);
-// });
+    $trail->parent('receitas.index');
+    $trail->push('Anexar Receita', route('receitas.create', $paciente), [
+        'actions' => [
+            [
+                'label' => 'Voltar',
+                'icon' => 'pi pi-arrow-left',
+                'url' => route('receitas.index', $paciente),
+                'variant' => 'secondary',
+            ],
+        ],
+    ]);
+});
 
-// Breadcrumbs::for('guia.clinicas', function (BreadcrumbTrail $trail) {
-//     $trail->parent('guia.inicio');
-//     $trail->push('Clínicas', route('guia.clinicas'), [
-//         'actions' => [
-//             [
-//                 'label' => 'Voltar',
-//                 'icon' => 'pi pi-arrow-left',
-//                 'url' => route('guia.inicio'),
-//                 'variant' => 'secondary',
-//             ],
-//         ],
-//     ]);
-// });
-
+// --- HISTÓRICO, LEMBRETES E JORNADA ---
 Breadcrumbs::for('historico.ps', function (BreadcrumbTrail $trail) {
     $trail->push('Histórico Clínico', route('historico.ps'), [
         'actions' => [

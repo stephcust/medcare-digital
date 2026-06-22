@@ -47,6 +47,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 
         Route::get('/{paciente}/receitas', [ReceitaController::class, 'index'])->name('receitas.index');
         Route::delete('/receitas/{receita}', [ReceitaController::class, 'destroy'])->name('receitas.destroy');
+        Route::get('/pacientes/{paciente}/receitas/inserir', [ReceitaController::class, 'create'])->name('receitas.create');
+        Route::post('/receitas/analisar-ia', [ReceitaController::class, 'analisarComIA'])->name('receitas.analisar-ia');
+        Route::post('/pacientes/{paciente}/receitas', [ReceitaController::class, 'store'])->name('receitas.store');
     });
 
     // Route::prefix('guia-medico')->name('guia.')->group(function () {
