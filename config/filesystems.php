@@ -39,7 +39,7 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
+            'url' => env('APP_URL') . '/storage',
             'visibility' => 'public',
             'throw' => false,
         ],
@@ -60,11 +60,15 @@ return [
             'driver' => 's3',
             'key' => env('SUPABASE_STORAGE_ACCESS_KEY_ID'),
             'secret' => env('SUPABASE_STORAGE_SECRET_ACCESS_KEY'),
-            'region' => env('SUPABASE_STORAGE_REGION', 'us-east-1'), // Padrão do Supabase
+            'region' => env('SUPABASE_STORAGE_REGION', 'sa-east-1'),
             'bucket' => env('SUPABASE_STORAGE_BUCKET'),
             'endpoint' => env('SUPABASE_STORAGE_ENDPOINT'),
             'use_path_style_endpoint' => true,
-            'throw' => true,
+            'url' => env('SUPABASE_STORAGE_ENDPOINT') . '/' . env('SUPABASE_STORAGE_BUCKET'),
+
+            'http' => [
+                'verify' => env('SUPABASE_STORAGE_VERIFY_SSL', true),
+            ],
         ],
 
     ],

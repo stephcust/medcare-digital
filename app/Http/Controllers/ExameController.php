@@ -3,19 +3,28 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Exames\StoreExameRequest;
 use App\Models\Exame;
+use App\Services\IA\GeminiService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class ExameController extends Controller
 {
+    protected $geminiService;
+
+    public function __construct(GeminiService $geminiService)
+    {
+        $this->geminiService = $geminiService;
+    }
+
     /**
-     * Exibe a linha do tempo com os exames do paciente.
+     * Lista todos os exames do usuário logado de forma segura.
      */
     public function index()
     {
-        // Garante que o paciente só veja os SEUS próprios exames (Regra de Negócio)
         $exames = Exame::where('user_id', auth()->id())
             ->orderBy('data_realizacao', 'desc')
             ->get();
@@ -27,7 +36,7 @@ class ExameController extends Controller
     }
 
     /**
-     * Exibe o formulário de cadastro manual.
+     * Renderiza a view unificada de cadastro de exames.
      */
     public function create()
     {
@@ -35,18 +44,101 @@ class ExameController extends Controller
     }
 
     /**
-     * Processa o upload e salva o registro no banco de dados.
+     * Endpoint assíncrono que processa o arquivo temporário usando o GeminiService.
+     * Não realiza o upload persistente no Supabase, apenas extrai os metadados.
      */
-    public function store(StoreExameRequest $request)
+    public function analisarComIA(Request $request)
     {
-        // Captura o arquivo enviado pelo formulário Vue
-        $file = $request->file('arquivo');
+        $request->validate([
+            'arquivo' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:10240']
+        ]);
 
-        // Armazenamento Seguro: Salva na pasta privada do sistema de arquivos
-        // Não usamos o disco 'public' por questões de segurança de dados médicos
-        $path = $file->store('exames_pacientes', 'local');
+        try {
+            $arquivo = $request->file('arquivo');
 
-        // Criação do registro associando ao usuário autenticado
+            $promptInstrucao = "Você é o assistente inteligente do MedCare Digital especializado em triagem de laudos.
+            Analise o documento anexo e extraia com precisão as seguintes informações clínicas:
+            1. nome: O nome comercial ou descritivo do exame (ex: 'Hemograma Completo').
+            2. tipo: Classifique obrigatoriamente em uma destas opções: 'Sangue', 'Imagem', 'Urina' ou 'Outros'.
+            3. laboratorio: O nome do laboratório clínico ou hospital emissor. Se não encontrar, retorne 'Não informado'.
+            4. data_realizacao: A data em formato 'YYYY-MM-DD'. Se não encontrar, use a data atual: " . now()->format('Y-m-d') . ".
+
+            Retorne única e exclusivamente um objeto JSON válido contendo exatamente este formato:
+            {
+                \"nome\": \"string\",
+                \"tipo\": \"string\",
+                \"laboratorio\": \"string\",
+                \"data_realizacao\": \"string\"
+            }";
+
+            // Invoca o serviço de Inteligência Artificial passando o arquivo temporário
+            $jsonResposta = $this->geminiService->analisarDocumento(
+                $arquivo->getRealPath(),
+                $arquivo->getMimeType(),
+                $promptInstrucao
+            );
+
+            if (!$jsonResposta) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'O assistente de IA não conseguiu ler o documento.'
+                ], 422);
+            }
+
+            $dadosExtraidos = json_decode($jsonResposta, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro de formatação estrutural na resposta da IA.'
+                ], 422);
+            }
+
+            return response()->json([
+                'success' => true,
+                'dados' => $dadosExtraidos
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Falha interna no processamento: ' . $e->getMessage()
+            ], 422);
+        }
+    }
+
+    /**
+     * Grava permanentemente o exame no banco de dados e faz o upload definitivo para o Supabase.
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'modo_cadastro'   => ['required', 'string', 'in:manual,ia'],
+            'nome'            => ['required', 'string', 'max:255'],
+            'tipo'            => ['required', 'string', 'max:255'],
+            'laboratorio'     => ['nullable', 'string', 'max:255'],
+            'data_realizacao' => ['required', 'date'],
+            'arquivo'         => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:10240'],
+        ], [
+            'arquivo.required' => 'O arquivo do exame é obrigatório para validação e armazenamento seguro.',
+            'nome.required' => 'O nome do exame é obrigatório.',
+            'tipo.required' => 'O tipo de exame é obrigatório.',
+            'data_realizacao.required' => 'A data de realização é obrigatória.'
+        ]);
+
+        $path = null;
+
+        if ($request->hasFile('arquivo')) {
+            $file = $request->file('arquivo');
+
+            // 💡 Sincronização Estrita: O UUID é gerado e fixado nesta variável local estável
+            $nomeArquivo = Str::uuid() . '.' . $file->getClientOriginalExtension();
+            $path = "usuario_" . auth()->id() . "/exames/" . $nomeArquivo;
+
+            // Envia o arquivo uma única vez usando exatamente o caminho definido acima
+            Storage::disk('supabase')->put($path, file_get_contents($file));
+        }
+
+        // Persiste no banco utilizando rigorosamente o mesmo $path do upload
         Exame::create([
             'user_id'         => auth()->id(),
             'nome'            => $request->nome,
@@ -54,20 +146,18 @@ class ExameController extends Controller
             'laboratorio'     => $request->laboratorio ?? 'Não informado',
             'data_realizacao' => $request->data_realizacao,
             'arquivo_path'    => $path,
-            'visualizado'     => true, // Como foi ele quem postou, já conta como visto
-            'origem'          => 'manual',
+            'visualizado'     => true,
+            'origem'          => $request->modo_cadastro === 'ia' ? 'api' : 'manual',
         ]);
 
-        // Redireciona o usuário usando a sessão do Inertia de volta para a listagem
-        return redirect()->route('exames.index')->with('success', 'Exame anexado com sucesso!');
+        return redirect()->route('exames.index')->with('success', 'Exame salvo e armazenado em segurança na nuvem!');
     }
 
     /**
-     * Exibe os detalhes do exame e marca como visualizado (limpa o alerta da Home).
+     * Exibe os detalhes de um exame específico com validação de escopo.
      */
     public function show(Exame $exame)
     {
-        // Regra de Negócio/Privacidade: Validação de segurança de escopo do SO de dados
         if ($exame->user_id !== auth()->id()) {
             abort(403, 'Acesso não autorizado.');
         }
@@ -82,7 +172,7 @@ class ExameController extends Controller
     }
 
     /**
-     * Endpoint seguro para download do arquivo protegido da memória do servidor.
+     * Endpoint de alta segurança para baixar arquivos protegidos direto do Supabase via Raw Bytes.
      */
     public function download(Exame $exame)
     {
@@ -90,15 +180,43 @@ class ExameController extends Controller
             abort(403, 'Acesso não autorizado.');
         }
 
-        if (!Storage::disk('local')->exists($exame->arquivo_path)) {
-            abort(444, 'Arquivo não encontrado no sistema.');
+        if (!$exame->arquivo_path) {
+            abort(404, 'Nenhum arquivo foi associado a este exame.');
         }
 
-        return Storage::disk('local')->download($exame->arquivo_path, $exame->nome . '.pdf');
+        try {
+            $extensao = pathinfo($exame->arquivo_path, PATHINFO_EXTENSION);
+            $nomeDownload = \Illuminate\Support\Str::slug($exame->nome) . '.' . $extensao;
+
+            $mimeTypes = [
+                'pdf'  => 'application/pdf',
+                'png'  => 'image/png',
+                'jpg'  => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+            ];
+            $contentType = $mimeTypes[strtolower($extensao)] ?? 'application/octet-stream';
+
+            // Baixa os bytes puros do arquivo de dentro do bucket
+            $conteudoArquivo = Storage::disk('supabase')->get($exame->arquivo_path);
+
+            if (!$conteudoArquivo) {
+                throw new \Exception("O arquivo retornou vazio ou não foi encontrado no caminho: {$exame->arquivo_path}");
+            }
+
+            // Devolve a resposta binária direta para forçar o download seguro no navegador
+            return response($conteudoArquivo, 200, [
+                'Content-Type'        => $contentType,
+                'Content-Disposition' => 'attachment; filename="' . $nomeDownload . '"',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao baixar do Supabase: ' . $e->getMessage());
+
+            abort(444, 'Não foi possível recuperar o arquivo do armazenamento em nuvem. Verifique as políticas de RLS ou se o arquivo foi excluído.');
+        }
     }
 
     /**
-     * Remove o exame do banco e elimina o arquivo físico do HD.
+     * Remove o exame do banco de dados e elimina o arquivo vinculado de dentro do Supabase.
      */
     public function destroy(Exame $exame)
     {
@@ -106,9 +224,9 @@ class ExameController extends Controller
             abort(403);
         }
 
-        // Chamada de sistema para desalocar o arquivo físico antes de limpar o registro
-        if (Storage::disk('local')->exists($exame->arquivo_path)) {
-            Storage::disk('local')->delete($exame->arquivo_path);
+        // Deleta fisicamente o arquivo do bucket para não deixar lixo eletrônico órfão
+        if ($exame->arquivo_path && Storage::disk('supabase')->exists($exame->arquivo_path)) {
+            Storage::disk('supabase')->delete($exame->arquivo_path);
         }
 
         $exame->delete();

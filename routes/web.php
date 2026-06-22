@@ -38,10 +38,12 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('exames/{exame}/download', [ExameController::class, 'download'])->name('exames.download');
 
         Route::resource('exames', ExameController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
+        Route::post('/exames/analisar-ia', [ExameController::class, 'analisarComIA'])->name('exames.analisar-ia');
 
         Route::get('/{paciente}/vacinacoes', [VacinacaoController::class, 'index'])->name('vacinacoes.index');
         Route::post('/{paciente}/vacinacoes', [VacinacaoController::class, 'store'])->name('vacinacoes.store');
         Route::delete('/vacinacoes/{vacinacao}', [VacinacaoController::class, 'destroy'])->name('vacinacoes.destroy');
+        Route::post('/vacinacoes/analisar-ia', [VacinacaoController::class, 'analisarComIA'])->name('vacinacoes.analisar-ia');
 
         Route::get('/{paciente}/receitas', [ReceitaController::class, 'index'])->name('receitas.index');
         Route::delete('/receitas/{receita}', [ReceitaController::class, 'destroy'])->name('receitas.destroy');

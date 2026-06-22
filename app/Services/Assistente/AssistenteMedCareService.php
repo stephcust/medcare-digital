@@ -28,13 +28,13 @@ class AssistenteMedCareService
             return $this->processarArquivoAnexo($user, $arquivo);
         }
 
-        // 2. Se for apenas texto, roda o processador local de lembretes (Ex: Testes 1 e 2)
+        // 2. Se for apenas texto, roda o processador local de lembretes
         $respostaLembrete = $this->lembreteChatService->processar($user, $mensagemUsuario);
         if ($respostaLembrete !== null) {
             return $respostaLembrete;
         }
 
-        // 3. Caso contrário, monta o contexto clínico e chama o Gemini (Ex: Teste 3)
+        // 3. Caso contrário, monta o contexto clínico e chama o Gemini
         $contextoUsuario = $this->medCareContextService->montar($user);
         $respostaGemini = $this->geminiService->gerarResposta($mensagemUsuario, $contextoUsuario);
 
@@ -132,7 +132,7 @@ Se for 'receitas':
 
             if ($categoria === 'vacinas') {
                 $pacienteId = $this->buscarPacienteIdPorUsuario($user->id);
-                
+
                 if (!$pacienteId) {
                     return "⚠️ Dados extraídos, mas nenhum perfil clínico de paciente foi localizado para o seu usuário.";
                 }
@@ -151,11 +151,11 @@ Se for 'receitas':
                 $dados['status'] = 'Ativa';
                 $dados['caminho_arquivo'] = 'uploads/receitas/' . $arquivo->hashName();
                 $dados['medicamentos'] = json_encode($dados['medicamentos']);
-                
+
                 $dataEmissao = $dados['data_emissao'] ?? now()->toDateString();
                 $dados['data_emissao'] = $dataEmissao;
                 $dados['data_validade'] = Carbon::parse($dataEmissao)->addDays(30)->toDateString();
-                
+
                 $dados['created_at'] = now();
                 $dados['updated_at'] = now();
 
@@ -190,7 +190,6 @@ Se for 'receitas':
             return DB::table('pacientes')->insertGetId([
                 'user_id'    => $userId,
                 'nome'       => $user->name,
-                'email'      => $user->email,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
