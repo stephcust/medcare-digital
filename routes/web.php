@@ -15,7 +15,6 @@ use Inertia\Inertia;
 use App\Http\Controllers\WhatsappSimulador\WhatsappSimuladorController;
 use App\Http\Controllers\JornadaInteligente\JornadaInteligenteController;
 use App\Http\Controllers\LembreteController;
-use App\Http\Controllers\PreparadorConsultaController;
 
 //* Rotas de visitantes - Sem autenticação
 Route::get('/', [VisitanteController::class, 'landingPage'])->name('landingPage');
@@ -72,6 +71,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/', [JornadaInteligenteController::class, 'index'])->name('index');
         Route::post('/relatos', [JornadaInteligenteController::class, 'store'])->name('relatos.store');
         Route::post('/resumo', [JornadaInteligenteController::class, 'gerarResumo'])->name('resumo');
+        Route::delete('/resumos/{resumo}', [JornadaInteligenteController::class, 'destruirResumo'])
+            ->name('resumos.destroy');
     });
 
     // Rotas do módulo de Lembretes
@@ -79,7 +80,4 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::post('/lembretes', [LembreteController::class, 'store'])->name('lembretes.store');
     Route::delete('/lembretes/{lembrete}', [LembreteController::class, 'destroy'])->name('lembretes.destroy');
 
-    // Rotas do módulo Preparador de Consulta
-    Route::get('/preparador-consulta', [PreparadorConsultaController::class, 'index'])->name('preparador.index');
-    Route::post('/preparador-consulta', [PreparadorConsultaController::class, 'gerar'])->name('preparador.gerar');
 });

@@ -4,78 +4,143 @@ namespace App\Http\Controllers\JornadaInteligente;
 
 use App\Http\Controllers\Controller;
 use App\Models\RelatoSaude;
-use App\Services\Assistente\MedCareContextService;
-use App\Services\IA\GeminiService;
+use App\Models\ResumoJornada;
+use App\Services\Assistente\ResumoJornadaService;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use Inertia\Response;
+use Throwable;
 
 class JornadaInteligenteController extends Controller
 {
-    public function index(Request $request)
-    {
-        $relatos = RelatoSaude::where('user_id', $request->user()->id)
+    public function index(
+        Request $request,
+        ResumoJornadaService $resumoJornadaService
+    ): Response {
+        $relatos = RelatoSaude::where(
+            'user_id',
+            $request->user()->id
+        )
             ->orderByDesc('data_ocorrencia')
             ->orderByDesc('created_at')
             ->get();
 
+        $resumosSalvos = ResumoJornada::query()
+            ->where('user_id', $request->user()->id)
+            ->orderByDesc('created_at')
+            ->limit(30)
+            ->get()
+            ->map(fn (ResumoJornada $resumo) =>
+                $resumoJornadaService->serializarResumo($resumo)
+            )
+            ->values();
+
         return Inertia::render('JornadaInteligente/Index', [
             'relatos' => $relatos,
+            'resumosSalvos' => $resumosSalvos,
         ]);
     }
 
-    public function store(Request $request)
-{
-    $data = $request->validate([
-        'categoria' => ['required', 'string', 'max:50'],
-        'titulo' => ['nullable', 'string', 'max:150'],
-        'relato' => ['required', 'string', 'max:2000'],
-        'data_ocorrencia' => ['nullable', 'date'],
-        'incluir_no_resumo' => ['boolean'],
-    ]);
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'categoria' => ['required', 'string', 'max:50'],
+            'titulo' => ['nullable', 'string', 'max:150'],
+            'relato' => ['required', 'string', 'max:2000'],
+            'data_ocorrencia' => ['nullable', 'date'],
+            'incluir_no_resumo' => ['boolean'],
+        ]);
 
-    if (!empty($data['data_ocorrencia'])) {
-        $dataOcorrencia = Carbon::parse($data['data_ocorrencia'] . ' ' . now()->toTimeString())->toDateTimeString();
-    } else {
-        $dataOcorrencia = now()->toDateTimeString();
+        if (!empty($data['data_ocorrencia'])) {
+            $dataOcorrencia = Carbon::parse(
+                $data['data_ocorrencia'] . ' ' . now()->toTimeString()
+            )->toDateTimeString();
+        } else {
+            $dataOcorrencia = now()->toDateTimeString();
+        }
+
+        RelatoSaude::create([
+            'user_id' => $request->user()->id,
+            'categoria' => $data['categoria'],
+            'titulo' => $data['titulo'] ?? null,
+            'relato' => $data['relato'],
+            'data_ocorrencia' => $dataOcorrencia,
+            'incluir_no_resumo' =>
+                $data['incluir_no_resumo'] ?? true,
+        ]);
+
+        return redirect()
+            ->route('jornada-inteligente.index')
+            ->with(
+                'success',
+                'Registro salvo na sua Jornada Inteligente.'
+            );
     }
-
-    RelatoSaude::create([
-        'user_id' => $request->user()->id,
-        'categoria' => $data['categoria'],
-        'titulo' => $data['titulo'] ?? null,
-        'relato' => $data['relato'],
-        'data_ocorrencia' => $dataOcorrencia, // Passa a salvar o Data + Horário
-        'incluir_no_resumo' => $data['incluir_no_resumo'] ?? true,
-    ]);
-
-    return redirect()
-        ->route('jornada-inteligente.index')
-        ->with('success', 'Registro de sintoma salvo na sua Jornada.');
-}
 
     public function gerarResumo(
         Request $request,
-        GeminiService $geminiService,
-        MedCareContextService $medCareContextService
-    ) {
-        $contexto = $medCareContextService->montar($request->user());
+        ResumoJornadaService $resumoJornadaService
+    ): JsonResponse {
+        $dados = $request->validate([
+            'periodo' => [
+                'required',
+                'string',
+                Rule::in(['30', '60', '90', 'todos']),
+            ],
+            'secoes' => ['required', 'array', 'min:1'],
+            'secoes.*' => [
+                'required',
+                'string',
+                Rule::in(ResumoJornadaService::SECOES_VALIDAS),
+            ],
+            'incluir_perguntas' => ['required', 'boolean'],
+        ]);
 
-        $mensagem = "
-Gere um Sumário de Preparação Clínico estruturado e objetivo para o médico com base nos dados e na linha do tempo do MedCare.
+        try {
+            $registro = $resumoJornadaService->gerarESalvar(
+                $request->user(),
+                $dados['secoes'],
+                $dados['periodo'],
+                $dados['incluir_perguntas'],
+                'jornada'
+            );
+        } catch (Throwable $e) {
+            report($e);
 
-O documento gerado deve:
-- Organizar de forma limpa as queixas do paciente e sintomas históricos informados por ele;
-- Cruzar cronologicamente laudos de exames, receitas ou passagens por PS encontrados no contexto;
-- Criar uma seção de sugestões de perguntas pertinentes que o paciente pode fazer ao médico;
-- Não tentar prever diagnósticos ou prescrever remédios;
-- Manter o foco estrito em simplificar e resumir o histórico para otimizar o tempo da consulta médica.
-";
-
-        $resumo = $geminiService->gerarResposta($mensagem, $contexto);
+            return response()->json([
+                'message' => 'Não foi possível gerar o sumário agora.',
+            ], 500);
+        }
 
         return response()->json([
-            'resumo' => $resumo ?: 'Não consegui compilar o sumário agora. Tente novamente em alguns instantes.'
+            'resumo' => $resumoJornadaService
+                ->normalizarConteudoSalvo(
+                    $registro->conteudo,
+                    $registro->periodo,
+                    $registro->incluir_perguntas
+                ),
+            'registro' => $resumoJornadaService
+                ->serializarResumo($registro),
         ]);
+    }
+
+    public function destruirResumo(
+        Request $request,
+        ResumoJornada $resumo
+    ): RedirectResponse {
+        abort_unless(
+            (int) $resumo->user_id === (int) $request->user()->id,
+            403
+        );
+
+        $resumo->delete();
+
+        return redirect()
+            ->route('jornada-inteligente.index')
+            ->with('success', 'Resumo apagado com sucesso.');
     }
 }

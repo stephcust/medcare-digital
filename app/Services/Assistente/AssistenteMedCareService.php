@@ -15,7 +15,8 @@ class AssistenteMedCareService
     public function __construct(
         private GeminiService $geminiService,
         private MedCareContextService $medCareContextService,
-        private LembreteChatService $lembreteChatService
+        private LembreteChatService $lembreteChatService,
+        private ResumoJornadaService $resumoJornadaService
     ) {}
 
     /**
@@ -42,7 +43,17 @@ class AssistenteMedCareService
             return $respostaLembrete;
         }
 
-        // 3. Monta os dados pessoais do usuário e acrescenta a política
+        // 3. Tenta interpretar pedidos de sumário clínico.
+        $respostaResumo = $this->resumoJornadaService->processarComando(
+            $user,
+            $mensagemUsuario
+        );
+
+        if ($respostaResumo !== null) {
+            return $respostaResumo;
+        }
+
+        // 4. Monta os dados pessoais do usuário e acrescenta a política
         // de respostas gerais e educativas de saúde.
         $contextoUsuario = $this->medCareContextService->montar($user)
             . "\n\n"
@@ -70,7 +81,7 @@ class AssistenteMedCareService
 POLÍTICA DE RESPOSTA DO MEDCARE:
 
 1. DADOS PESSOAIS DO USUÁRIO
-- Para responder sobre exames, vacinas, receitas, histórico, relatos, lembretes ou plano do próprio usuário, use somente os dados existentes no contexto do MedCare.
+- Para responder sobre exames, vacinas, receitas, histórico clínico, relatos ou lembretes do próprio usuário, use somente os dados existentes no contexto do MedCare.
 - Nunca invente um dado pessoal que não esteja cadastrado.
 
 2. INFORMAÇÕES GERAIS DE SAÚDE
@@ -195,9 +206,9 @@ PROMPT;
 
                 DB::table('exames')->insert($dados);
 
-                return "✅ **Exame extraído com sucesso!**\n\n"
-                    . "• **Exame:** {$dados['nome']}\n"
-                    . "• **Laboratório:** {$dados['laboratorio']}\n"
+                return "✅ Exame extraído com sucesso!\n\n"
+                    . "• Exame: {$dados['nome']}\n"
+                    . "• Laboratório: {$dados['laboratorio']}\n"
                     . '• **Data:** '
                     . Carbon::parse($dados['data_realizacao'])->format('d/m/Y')
                     . "\n\nInserido com sucesso no seu módulo de exames!";
@@ -217,9 +228,9 @@ PROMPT;
 
                 DB::table('vacinacoes')->insert($dados);
 
-                return "✅ **Imunização registrada!**\n\n"
-                    . "• **Vacina:** {$dados['nome_vacina']}\n"
-                    . "• **Dose:** {$dados['numero_dose']}\n"
+                return "✅ Imunização registrada!\n\n"
+                    . "• Vacina: {$dados['nome_vacina']}\n"
+                    . "• Dose: {$dados['numero_dose']}\n"
                     . '• **Data:** '
                     . Carbon::parse($dados['data_aplicacao'])->format('d/m/Y')
                     . "\n\nHistórico vacinal atualizado!";
@@ -248,9 +259,9 @@ PROMPT;
 
                 DB::table('receitas')->insert($dados);
 
-                return "✅ **Receita médica cadastrada!**\n\n"
-                    . "• **Médico(a):** {$dados['medico']}\n"
-                    . "• **Especialidade:** {$dados['especialidade']}\n\n"
+                return "✅ Receita médica cadastrada!\n\n"
+                    . "• Médico(a): {$dados['medico']}\n"
+                    . "• Especialidade: {$dados['especialidade']}\n\n"
                     . 'Os medicamentos prescritos foram interpretados e '
                     . 'arquivados no sistema.';
             }

@@ -27,19 +27,11 @@ class MedCareContextService
 
         $this->adicionarRegistrosDoUsuario(
             $linhas,
-            'Carteira digital / Plano de saúde',
-            'carteira_digital',
-            $user
-        );
-
-        $this->adicionarRegistrosDoUsuario(
-            $linhas,
             'Exames',
             'exames',
             $user
         );
 
-        // As vacinas pertencem ao paciente, e não diretamente ao usuário.
         $this->adicionarRegistrosDoPaciente(
             $linhas,
             'Vacinas',
@@ -54,30 +46,15 @@ class MedCareContextService
             $user
         );
 
-        $this->adicionarRegistrosDoUsuario(
+        $this->adicionarHistoricoClinico(
             $linhas,
-            'Histórico de pronto-socorro',
-            'historico_pronto_socorro',
             $user
-        );
-
-        $this->adicionarRegistrosDoUsuario(
-            $linhas,
-            'Histórico PS',
-            'historico_ps',
-            $user
-        );
-
-        $this->adicionarRegistrosGerais(
-            $linhas,
-            'Guia Médico / Infraestrutura de saúde',
-            'infraestrutura_saude'
         );
 
         $linhas[] = '';
         $linhas[] = 'Instruções para a IA:';
         $linhas[] = '- Para perguntas sobre os dados pessoais do usuário no MedCare, use apenas os registros listados acima.';
-        $linhas[] = '- Não invente exames, vacinas, receitas, plano, histórico ou qualquer outro dado pessoal que não esteja no contexto.';
+        $linhas[] = '- Não invente exames, vacinas, receitas, histórico clínico ou qualquer outro dado pessoal que não esteja no contexto.';
         $linhas[] = '- Para perguntas gerais e educativas de saúde pública, você pode usar conhecimento geral confiável, mesmo quando a informação não estiver cadastrada no MedCare.';
         $linhas[] = '- Pode explicar prevenção, vacinação, efeitos geralmente esperados, termos de exames, uso seguro de medicamentos e outras orientações gerais.';
         $linhas[] = '- Não faça diagnóstico, não prescreva medicamentos, não defina ou altere doses, não interrompa tratamentos e não substitua avaliação profissional.';
@@ -85,6 +62,315 @@ class MedCareContextService
         $linhas[] = '- Em caso de sinais intensos, persistentes ou potencialmente graves, oriente a procurar atendimento de saúde.';
 
         return implode("\n", $linhas);
+    }
+
+    /**
+     * Monta somente o contexto escolhido pelo usuário para o sumário clínico.
+     */
+    public function montarResumo(
+        User $user,
+        array $secoes,
+        string $periodo
+    ): string {
+        $secoes = array_values(array_unique($secoes));
+        $dias = $this->diasDoPeriodo($periodo);
+
+        $linhas = [
+            'CONTEXTO SELECIONADO PARA O SUMÁRIO DE PREPARAÇÃO CLÍNICA',
+            'Período solicitado: ' . $this->nomePeriodo($periodo),
+            '',
+        ];
+
+        if (in_array('dados_pessoais', $secoes, true)) {
+            $linhas[] = 'Dados básicos do usuário:';
+            $linhas[] = "- Nome: {$user->name}";
+            $linhas[] = "- E-mail: {$user->email}";
+        }
+
+        if (in_array('relatos', $secoes, true)) {
+            $this->adicionarRegistrosDoUsuarioParaResumo(
+                $linhas,
+                'Sintomas, queixas e relatos da Jornada Inteligente',
+                'relatos_saude',
+                $user,
+                $dias,
+                true
+            );
+        }
+
+        if (in_array('exames', $secoes, true)) {
+            $this->adicionarRegistrosDoUsuarioParaResumo(
+                $linhas,
+                'Exames',
+                'exames',
+                $user,
+                $dias
+            );
+        }
+
+        if (in_array('receitas', $secoes, true)) {
+            $this->adicionarRegistrosDoUsuarioParaResumo(
+                $linhas,
+                'Receitas',
+                'receitas',
+                $user,
+                $dias
+            );
+        }
+
+        if (in_array('vacinas', $secoes, true)) {
+            $this->adicionarRegistrosDoPacienteParaResumo(
+                $linhas,
+                'Vacinas',
+                'vacinacoes',
+                $user,
+                $dias
+            );
+        }
+
+        if (in_array('historico_clinico', $secoes, true)) {
+            $this->adicionarHistoricoClinicoParaResumo(
+                $linhas,
+                $user,
+                $dias
+            );
+        }
+
+        $linhas[] = '';
+        $linhas[] = 'REGRAS OBRIGATÓRIAS PARA O SUMÁRIO:';
+        $linhas[] = '- Use somente as informações presentes neste contexto.';
+        $linhas[] = '- Não invente registros ausentes.';
+        $linhas[] = '- Diferencie claramente relatos do usuário de documentos e registros do sistema.';
+        $linhas[] = '- Não faça diagnóstico, não prescreva medicamentos e não altere tratamentos.';
+        $linhas[] = '- Quando não houver dados em uma seção selecionada, informe isso de forma breve.';
+
+        return implode("\n", $linhas);
+    }
+
+    public function nomePeriodo(string $periodo): string
+    {
+        return match ($periodo) {
+            '30' => 'Últimos 30 dias',
+            '60' => 'Últimos 60 dias',
+            '90' => 'Últimos 90 dias',
+            default => 'Todo o histórico disponível',
+        };
+    }
+
+    private function diasDoPeriodo(string $periodo): ?int
+    {
+        return match ($periodo) {
+            '30' => 30,
+            '60' => 60,
+            '90' => 90,
+            default => null,
+        };
+    }
+
+    private function adicionarHistoricoClinico(
+        array &$linhas,
+        User $user
+    ): void {
+        $tabela = $this->tabelaHistoricoClinico();
+
+        if ($tabela === null) {
+            $linhas[] = '';
+            $linhas[] = 'Histórico Clínico:';
+            $linhas[] = '- Nenhum registro encontrado para este usuário.';
+            return;
+        }
+
+        $this->adicionarRegistrosDoUsuario(
+            $linhas,
+            'Histórico Clínico',
+            $tabela,
+            $user
+        );
+    }
+
+    private function adicionarHistoricoClinicoParaResumo(
+        array &$linhas,
+        User $user,
+        ?int $dias
+    ): void {
+        $tabela = $this->tabelaHistoricoClinico();
+
+        if ($tabela === null) {
+            $linhas[] = '';
+            $linhas[] = 'Histórico Clínico:';
+            $linhas[] = '- Nenhum registro disponível.';
+            return;
+        }
+
+        $this->adicionarRegistrosDoUsuarioParaResumo(
+            $linhas,
+            'Histórico Clínico',
+            $tabela,
+            $user,
+            $dias
+        );
+    }
+
+    private function tabelaHistoricoClinico(): ?string
+    {
+        $possiveis = [
+            'historico_clinico',
+            'historicos_clinicos',
+            'historico_ps',
+            'historico_pronto_socorro',
+        ];
+
+        foreach ($possiveis as $tabela) {
+            if (Schema::hasTable($tabela)) {
+                return $tabela;
+            }
+        }
+
+        return null;
+    }
+
+    private function adicionarRegistrosDoUsuarioParaResumo(
+        array &$linhas,
+        string $titulo,
+        string $tabela,
+        User $user,
+        ?int $dias,
+        bool $somenteMarcados = false
+    ): void {
+        if (!Schema::hasTable($tabela)) {
+            $linhas[] = '';
+            $linhas[] = "{$titulo}:";
+            $linhas[] = '- Nenhum registro disponível.';
+            return;
+        }
+
+        $colunas = Schema::getColumnListing($tabela);
+        $colunaUsuario = $this->encontrarColunaUsuario($colunas);
+
+        if (!$colunaUsuario) {
+            $linhas[] = '';
+            $linhas[] = "{$titulo}:";
+            $linhas[] = '- Não foi possível relacionar os registros ao usuário.';
+            return;
+        }
+
+        $this->adicionarRegistrosFiltradosParaResumo(
+            $linhas,
+            $titulo,
+            $tabela,
+            $colunas,
+            $colunaUsuario,
+            $user->id,
+            $dias,
+            $somenteMarcados
+        );
+    }
+
+    private function adicionarRegistrosDoPacienteParaResumo(
+        array &$linhas,
+        string $titulo,
+        string $tabela,
+        User $user,
+        ?int $dias
+    ): void {
+        if (!Schema::hasTable('pacientes') || !Schema::hasTable($tabela)) {
+            $linhas[] = '';
+            $linhas[] = "{$titulo}:";
+            $linhas[] = '- Nenhum registro disponível.';
+            return;
+        }
+
+        $pacienteId = DB::table('pacientes')
+            ->where('user_id', $user->id)
+            ->value('id');
+
+        if (!$pacienteId) {
+            $linhas[] = '';
+            $linhas[] = "{$titulo}:";
+            $linhas[] = '- Nenhum paciente vinculado ao usuário foi encontrado.';
+            return;
+        }
+
+        $colunas = Schema::getColumnListing($tabela);
+
+        if (!in_array('paciente_id', $colunas, true)) {
+            $linhas[] = '';
+            $linhas[] = "{$titulo}:";
+            $linhas[] = '- Não foi possível relacionar as vacinas ao paciente.';
+            return;
+        }
+
+        $this->adicionarRegistrosFiltradosParaResumo(
+            $linhas,
+            $titulo,
+            $tabela,
+            $colunas,
+            'paciente_id',
+            (int) $pacienteId,
+            $dias
+        );
+    }
+
+    private function adicionarRegistrosFiltradosParaResumo(
+        array &$linhas,
+        string $titulo,
+        string $tabela,
+        array $colunas,
+        string $colunaFiltro,
+        int $valorFiltro,
+        ?int $dias,
+        bool $somenteMarcados = false
+    ): void {
+        $colunasSelecionadas = $this->colunasRelevantes($colunas);
+
+        $linhas[] = '';
+        $linhas[] = "{$titulo}:";
+
+        if (empty($colunasSelecionadas)) {
+            $linhas[] = '- Nenhuma informação relevante foi encontrada.';
+            return;
+        }
+
+        $query = DB::table($tabela)
+            ->select($colunasSelecionadas)
+            ->where($colunaFiltro, $valorFiltro);
+
+        if (
+            $somenteMarcados
+            && in_array('incluir_no_resumo', $colunas, true)
+        ) {
+            $query->where('incluir_no_resumo', true);
+        }
+
+        $colunaData = $this->colunaData($colunas);
+
+        if ($dias !== null && $colunaData !== null) {
+            $query->where(
+                $colunaData,
+                '>=',
+                now()->subDays($dias)->startOfDay()
+            );
+        }
+
+        $total = (clone $query)->count();
+        $colunaOrdenacao = $this->colunaOrdenacao($colunas);
+
+        if ($colunaOrdenacao) {
+            $query->orderByDesc($colunaOrdenacao);
+        }
+
+        $registros = $query->limit(50)->get();
+
+        $linhas[] = "- Total encontrado no período: {$total}";
+
+        if ($registros->isEmpty()) {
+            $linhas[] = '- Nenhum registro encontrado no período selecionado.';
+            return;
+        }
+
+        foreach ($registros as $registro) {
+            $linhas[] = '- ' . $this->formatarRegistro((array) $registro);
+        }
     }
 
     private function adicionarRegistrosDoUsuario(
@@ -155,7 +441,6 @@ class MedCareContextService
             return;
         }
 
-        // O título já foi adicionado acima.
         array_pop($linhas);
         array_pop($linhas);
 
@@ -165,7 +450,7 @@ class MedCareContextService
             $tabela,
             $colunas,
             'paciente_id',
-            $pacienteId
+            (int) $pacienteId
         );
     }
 
@@ -192,7 +477,6 @@ class MedCareContextService
             ->where($colunaFiltro, $valorFiltro);
 
         $total = (clone $query)->count();
-
         $colunaOrdenacao = $this->colunaOrdenacao($colunas);
 
         if ($colunaOrdenacao) {
@@ -231,7 +515,6 @@ class MedCareContextService
 
         $query = DB::table($tabela)->select($colunasSelecionadas);
         $total = DB::table($tabela)->count();
-
         $colunaOrdenacao = $this->colunaOrdenacao($colunas);
 
         if ($colunaOrdenacao) {
@@ -275,14 +558,39 @@ class MedCareContextService
     private function colunaOrdenacao(array $colunas): ?string
     {
         $possiveis = [
+            'data_ocorrencia',
             'data_realizacao',
             'data_aplicacao',
+            'data_emissao',
             'data_consulta',
-            'data_ocorrencia',
+            'data_atendimento',
             'created_at',
             'updated_at',
             'data',
             'id',
+        ];
+
+        foreach ($possiveis as $coluna) {
+            if (in_array($coluna, $colunas, true)) {
+                return $coluna;
+            }
+        }
+
+        return null;
+    }
+
+    private function colunaData(array $colunas): ?string
+    {
+        $possiveis = [
+            'data_ocorrencia',
+            'data_realizacao',
+            'data_aplicacao',
+            'data_emissao',
+            'data_consulta',
+            'data_atendimento',
+            'created_at',
+            'updated_at',
+            'data',
         ];
 
         foreach ($possiveis as $coluna) {
@@ -324,23 +632,34 @@ class MedCareContextService
             'data_aplicacao',
             'data_proxima_dose',
             'observacoes',
+            'observacao',
 
-            'nome_plano',
-            'plano',
-            'operadora',
-            'numero_carteirinha',
-            'validade',
-            'cobertura',
 
             'medico',
             'especialidade',
+            'medicamentos',
+            'data_emissao',
+            'data_validade',
+
             'clinica',
             'hospital',
+            'nome_hospital',
             'unidade',
             'endereco',
             'bairro',
             'cidade',
             'telefone',
+            'motivo',
+            'queixa_principal',
+            'procedimentos',
+            'data_atendimento',
+            'alta_em',
+            'diagnostico',
+            'tratamento',
+            'condicao',
+            'alergias',
+            'antecedentes',
+            'observacao_clinica',
 
             'data',
             'data_consulta',
@@ -362,6 +681,10 @@ class MedCareContextService
 
             if (is_bool($valor)) {
                 $valor = $valor ? 'sim' : 'não';
+            }
+
+            if (is_array($valor)) {
+                $valor = json_encode($valor, JSON_UNESCAPED_UNICODE);
             }
 
             $nomeCampo = str_replace('_', ' ', $campo);
