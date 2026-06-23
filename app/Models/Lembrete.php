@@ -20,11 +20,29 @@ class Lembrete extends Model
         'data_hora',
         'status',
         'concluido_em',
+        'frequencia',
+        'horarios',
+        'serie_id',
+        'recorrente',
+        'intervalo_horas',
+        'data_inicio',
+        'data_fim',
+        'dias_semana',
+        'ativo',
+        'enviado_em',
     ];
 
     protected $casts = [
         'data_hora' => 'datetime',
         'concluido_em' => 'datetime',
+        'horarios' => 'array',
+        'dias_semana' => 'array',
+        'recorrente' => 'boolean',
+        'intervalo_horas' => 'integer',
+        'data_inicio' => 'datetime',
+        'data_fim' => 'datetime',
+        'ativo' => 'boolean',
+        'enviado_em' => 'datetime',
     ];
 
     public function user(): BelongsTo
