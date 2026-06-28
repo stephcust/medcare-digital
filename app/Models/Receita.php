@@ -14,16 +14,17 @@ class Receita extends Model
         'medico',
         'especialidade',
         'medicamentos',
-        'caminho_arquivo',
         'status',
+        'arquivo_path',
+        'arquivo_url',
         'data_emissao',
-        'data_validade'
+        'data_validade',
     ];
 
     protected $casts = [
         'data_emissao' => 'date',
         'data_validade' => 'date',
-        'medicamentos' => 'array', // Converte o JSONB do Postgres em Array no PHP
+        'medicamentos' => 'array',
     ];
 
     public function user(): BelongsTo

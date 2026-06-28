@@ -172,9 +172,22 @@ class ExameController extends Controller
     }
 
     /**
-     * Endpoint de alta segurança para baixar arquivos protegidos direto do Supabase via Raw Bytes.
+     * Abre o arquivo do exame no navegador.
+     */
+    public function visualizar(Exame $exame)
+    {
+        return $this->responderArquivo($exame, 'inline');
+    }
+
+    /**
+     * Baixa o arquivo do exame.
      */
     public function download(Exame $exame)
+    {
+        return $this->responderArquivo($exame, 'attachment');
+    }
+
+    private function responderArquivo(Exame $exame, string $disposicao)
     {
         if ($exame->user_id !== auth()->id()) {
             abort(403, 'Acesso não autorizado.');
@@ -185,33 +198,48 @@ class ExameController extends Controller
         }
 
         try {
-            $extensao = pathinfo($exame->arquivo_path, PATHINFO_EXTENSION);
-            $nomeDownload = \Illuminate\Support\Str::slug($exame->nome) . '.' . $extensao;
+            $extensao = strtolower(
+                pathinfo($exame->arquivo_path, PATHINFO_EXTENSION)
+            );
+
+            $nomeDownload = Str::slug($exame->nome ?: 'exame')
+                . '.'
+                . ($extensao ?: 'pdf');
 
             $mimeTypes = [
-                'pdf'  => 'application/pdf',
-                'png'  => 'image/png',
-                'jpg'  => 'image/jpeg',
+                'pdf' => 'application/pdf',
+                'png' => 'image/png',
+                'jpg' => 'image/jpeg',
                 'jpeg' => 'image/jpeg',
             ];
-            $contentType = $mimeTypes[strtolower($extensao)] ?? 'application/octet-stream';
 
-            // Baixa os bytes puros do arquivo de dentro do bucket
-            $conteudoArquivo = Storage::disk('supabase')->get($exame->arquivo_path);
+            $contentType = $mimeTypes[$extensao]
+                ?? 'application/octet-stream';
 
-            if (!$conteudoArquivo) {
-                throw new \Exception("O arquivo retornou vazio ou não foi encontrado no caminho: {$exame->arquivo_path}");
+            $conteudoArquivo = Storage::disk('supabase')
+                ->get($exame->arquivo_path);
+
+            if ($conteudoArquivo === '') {
+                throw new \RuntimeException(
+                    'O arquivo do exame foi retornado vazio.'
+                );
             }
 
-            // Devolve a resposta binária direta para forçar o download seguro no navegador
             return response($conteudoArquivo, 200, [
-                'Content-Type'        => $contentType,
-                'Content-Disposition' => 'attachment; filename="' . $nomeDownload . '"',
+                'Content-Type' => $contentType,
+                'Content-Disposition' => $disposicao
+                    . '; filename="' . $nomeDownload . '"',
+                'X-Content-Type-Options' => 'nosniff',
             ]);
-        } catch (\Exception $e) {
-            Log::error('Erro ao baixar do Supabase: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error(
+                'Erro ao recuperar exame do Supabase: ' . $e->getMessage()
+            );
 
-            abort(444, 'Não foi possível recuperar o arquivo do armazenamento em nuvem. Verifique as políticas de RLS ou se o arquivo foi excluído.');
+            abort(
+                404,
+                'Não foi possível recuperar o arquivo do exame.'
+            );
         }
     }
 

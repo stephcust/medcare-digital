@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Paciente extends Model
@@ -10,35 +11,29 @@ class Paciente extends Model
     protected $table = 'pacientes';
 
     protected $fillable = [
-        'nome_completo',
-        'data_nascimento',
-        'cpf',
+        'user_id',
         'rg',
         'genero',
         'telefone',
-        'email',
         'cep',
         'endereco',
         'cidade',
         'estado',
         'tipo_sanguineo',
-        'alergias_conhecidas'
+        'alergias_conhecidas',
     ];
 
-    // Mapeia os campos de data para serem tratados como objetos Carbon pelo Laravel
-    protected $casts = [
-        'data_nascimento' => 'date',
-    ];
-
-    /**
-     * Relacionamento: Um paciente pode ter muitas vacinações registradas.
-     */
     public function vacinacoes(): HasMany
     {
         return $this->hasMany(Vacinacao::class, 'paciente_id');
     }
 
-    public function user()
+    public function historicosClinicos(): HasMany
+    {
+        return $this->hasMany(HistoricoClinico::class, 'paciente_id');
+    }
+
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }

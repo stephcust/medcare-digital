@@ -9,8 +9,8 @@ class HistoricoClinico extends Model
 {
     protected $table = 'historico_clinico';
 
-    const CREATED_AT = 'criado_em';
-    const UPDATED_AT = 'atualizado_em';
+    public const CREATED_AT = 'criado_em';
+    public const UPDATED_AT = 'atualizado_em';
 
     protected $fillable = [
         'paciente_id',
@@ -24,18 +24,24 @@ class HistoricoClinico extends Model
         'exames_realizados',
         'medicamentos',
         'desfecho',
-        'acompanhamento'
+        'acompanhamento',
+        'arquivo_path',
+        'arquivo_url',
+        'origem',
+        'relato_original',
+        'observacoes',
     ];
 
     protected $casts = [
         'data_atendimento' => 'datetime',
         'exames_realizados' => 'array',
-        'medicamentos' => 'array'
+        'medicamentos' => 'array',
     ];
 
-    /**
-     * Relacionamento: O histórico pertence a um Paciente (Patient).
-     */
+    protected $attributes = [
+        'origem' => 'manual',
+    ];
+
     public function paciente(): BelongsTo
     {
         return $this->belongsTo(Paciente::class, 'paciente_id');

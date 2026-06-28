@@ -2,29 +2,29 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Exame;
-use Illuminate\Foundation\Application;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Session;
+use App\Services\Pendencias\PendenciaSaudeService;
 use Inertia\Inertia;
 
 class InicioController extends Controller
 {
-    public function inicioAutenticado()
+    public function inicioAutenticado(PendenciaSaudeService $pendenciaService)
     {
-        // dd(Session::all());
-        $examesPendentes = Exame::where('user_id', auth()->id())
-        ->where('visualizado', false)
-        ->with(['user']) // Carrega relacionamento se necessário
-        ->orderBy('data_realizacao', 'desc')
-        ->get();
+        $user = auth()->user();
 
-        $paciente = auth()->user()->paciente;
-        return Inertia::render("InicioAutenticado", [
+        $examesPendentes = Exame::query()
+            ->where('user_id', $user->id)
+            ->where('visualizado', false)
+            ->orderByDesc('data_realizacao')
+            ->get();
+
+        $central = $pendenciaService->montar($user);
+
+        return Inertia::render('InicioAutenticado', [
             'ultimoExamePendente' => $examesPendentes->first(),
-            'paciente' => $paciente
+            'paciente' => $user->paciente,
+            'resumoPendencias' => $central['resumo'],
+            'pendenciasDestaque' => $central['destaques'],
         ]);
     }
 }

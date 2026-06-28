@@ -1,25 +1,19 @@
 <script setup>
-import { ref } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Link } from '@inertiajs/vue3';
 
 defineProps({
     ultimoExamePendente: Object,
-    paciente: Object
+    paciente: Object,
+    resumoPendencias: {
+        type: Object,
+        default: () => ({ atrasadas: 0, hoje: 0, proximas: 0, automaticas: 0 })
+    },
+    pendenciasDestaque: {
+        type: Array,
+        default: () => []
+    }
 });
-
-// Controle do Modal de Ativação do WhatsApp
-const useWhatsappModal = ref(false);
-const whatsappNumero = ref('');
-const statusIntegracao = ref('disponivel'); // disponivel, processando, integrado
-
-const ativarIntegracao = () => {
-    if (!whatsappNumero.value) return;
-    statusIntegracao.value = 'processando';
-    setTimeout(() => {
-        statusIntegracao.value = 'integrado';
-    }, 2000);
-};
 </script>
 
 <template>
@@ -39,38 +33,48 @@ const ativarIntegracao = () => {
                 </div>
             </div>
 
-            <div v-if="statusIntegracao !== 'integrado'" class="mb-8 bg-gradient-to-br from-emerald-600 to-teal-700 rounded-3xl p-6 text-white shadow-sm relative overflow-hidden text-left">
-                <div class="relative z-10 max-w-2xl">
-                    <span class="bg-white/20 text-white text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-md backdrop-blur-md">
-                        Ecossistema Integrado
-                    </span>
-                    <h3 class="text-xl font-extrabold mt-3 tracking-tight">Traga o MedCare para o seu WhatsApp</h3>
-                    <p class="text-emerald-100 text-sm mt-2 leading-relaxed">
-                        Envie mensagens, fotos de exames, receitas ou registre sintomas diretamente pelo chat. Nossa IA processa as informações e atualiza seus módulos automaticamente.
-                    </p>
-                    <button
-                        @click="useWhatsappModal = true"
-                        class="mt-5 bg-white text-emerald-700 hover:bg-emerald-50 px-5 py-2.5 rounded-2xl text-sm font-bold tracking-wide shadow-xs transition flex items-center gap-2 border-none cursor-pointer"
-                    >
-                        <i class="pi pi-whatsapp text-lg"></i>
-                        Vincular meu WhatsApp
-                    </button>
-                </div>
-                <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-emerald-500/20 rounded-full blur-xl pointer-events-none"></div>
-            </div>
-
-            <div v-else class="mb-8 bg-white border border-emerald-100 rounded-3xl p-4 flex items-center justify-between shadow-xs text-left">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
-                        <i class="pi pi-check-circle text-xl"></i>
-                    </div>
+            <Link
+                v-if="resumoPendencias.atrasadas || resumoPendencias.hoje || resumoPendencias.proximas || resumoPendencias.automaticas"
+                :href="route('lembretes.index')"
+                class="mb-8 block rounded-3xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-5 text-left no-underline shadow-xs transition hover:border-amber-300"
+            >
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <p class="font-bold text-slate-800 text-sm">WhatsApp Vinculado!</p>
-                        <p class="text-xs text-slate-400">Pronto para receber comandos de texto, áudio ou arquivos.</p>
+                        <div class="flex items-center gap-2">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+                                <i class="pi pi-bell"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-black text-slate-800">Central de Pendências</p>
+                                <p class="text-xs text-slate-500">O MedCare encontrou itens que merecem sua atenção.</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 flex flex-wrap gap-2 text-[11px] font-bold">
+                            <span v-if="resumoPendencias.atrasadas" class="rounded-full bg-rose-100 px-2.5 py-1 text-rose-700">
+                                {{ resumoPendencias.atrasadas }} atrasada(s)
+                            </span>
+                            <span v-if="resumoPendencias.hoje" class="rounded-full bg-amber-100 px-2.5 py-1 text-amber-700">
+                                {{ resumoPendencias.hoje }} para hoje
+                            </span>
+                            <span v-if="resumoPendencias.proximas" class="rounded-full bg-blue-100 px-2.5 py-1 text-blue-700">
+                                {{ resumoPendencias.proximas }} próxima(s)
+                            </span>
+                            <span v-if="resumoPendencias.automaticas" class="rounded-full bg-indigo-100 px-2.5 py-1 text-indigo-700">
+                                {{ resumoPendencias.automaticas }} alerta(s) automático(s)
+                            </span>
+                        </div>
                     </div>
+
+                    <span class="text-xs font-black text-amber-800">Ver pendências →</span>
                 </div>
-                <button @click="statusIntegracao = 'disponivel'" class="text-xs font-bold text-slate-400 hover:text-rose-500 bg-transparent border-none cursor-pointer">Desconectar</button>
-            </div>
+
+                <div v-if="pendenciasDestaque.length" class="mt-4 border-t border-amber-200/70 pt-3">
+                    <p v-for="pendencia in pendenciasDestaque.slice(0, 3)" :key="pendencia.id" class="mt-1 text-xs text-slate-600">
+                        • {{ pendencia.titulo }}
+                    </p>
+                </div>
+            </Link>
 
             <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-5 text-left">
 
@@ -141,69 +145,6 @@ const ativarIntegracao = () => {
                     </div>
                 </Link>
 
-            </div>
-
-            <div class="fixed bottom-6 right-6 z-50">
-                <Link
-                    href="/whatsapp-simulador"
-                    class="w-14 h-14 bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-emerald-600 transition hover:scale-105 active:scale-95 group relative border-none cursor-pointer"
-                >
-                    <i class="pi pi-whatsapp text-2xl"></i>
-                    <span class="absolute right-16 bg-slate-900 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl shadow-md opacity-0 group-hover:opacity-100 transition whitespace-nowrap pointer-events-none">
-                        Simulador WhatsApp IA
-                    </span>
-                </Link>
-            </div>
-
-            <div v-if="useWhatsappModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-                <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-xl border border-slate-100 text-left">
-                    <div class="flex justify-between items-center mb-4">
-                        <h4 class="text-lg font-black text-slate-800">Ativar WhatsApp</h4>
-                        <button @click="useWhatsappModal = false" class="text-slate-400 hover:text-slate-600 bg-transparent border-none text-base cursor-pointer">
-                            <i class="pi pi-times"></i>
-                        </button>
-                    </div>
-
-                    <div v-if="statusIntegracao === 'disponivel'">
-                        <p class="text-xs text-slate-500 mb-4 leading-relaxed">
-                            Insira seu número com o DDD para vincular seu perfil à nossa inteligência conversacional.
-                        </p>
-                        <div class="mb-4">
-                            <label class="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wider">Número do Celular</label>
-                            <input
-                                v-model="whatsappNumero"
-                                type="text"
-                                placeholder="(92) 99999-9999"
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:border-emerald-500 text-slate-800"
-                            />
-                        </div>
-                        <button
-                            @click="ativarIntegracao"
-                            class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl text-sm transition border-none cursor-pointer"
-                        >
-                            Confirmar Vínculo
-                        </button>
-                    </div>
-
-                    <div v-if="statusIntegracao === 'processando'" class="py-8 flex flex-col items-center justify-center text-center">
-                        <div class="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                        <p class="text-sm font-bold text-slate-700">Conectando Webhooks...</p>
-                    </div>
-
-                    <div v-if="statusIntegracao === 'integrado'" class="py-4 text-center">
-                        <div class="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <i class="pi pi-check text-xl font-bold"></i>
-                        </div>
-                        <p class="text-sm font-bold text-slate-800">Sincronização Pronta!</p>
-                        <p class="text-xs text-slate-400 mt-1 mb-4">O fluxo inteligente agora está mapeado para o seu perfil.</p>
-                        <button
-                            @click="useWhatsappModal = false"
-                            class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition border-none cursor-pointer"
-                        >
-                            Fechar Janela
-                        </button>
-                    </div>
-                </div>
             </div>
 
         </div>

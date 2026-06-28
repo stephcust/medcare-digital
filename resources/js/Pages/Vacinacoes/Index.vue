@@ -293,9 +293,26 @@ const formatarData = (dataStr) => {
                                         </div>
                                     </div>
 
-                                    <div v-if="vacina.arquivo_url">
-                                        <a :href="vacina.arquivo_url" target="_blank" class="flex items-center gap-1 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition no-underline">
-                                            <i class="pi pi-paperclip"></i> Ver Documento
+                                    <div
+                                        v-if="vacina.arquivo_path"
+                                        class="flex flex-wrap items-center justify-end gap-2"
+                                    >
+                                        <a
+                                            :href="route('vacinacoes.visualizar', vacina.id)"
+                                            target="_blank"
+                                            rel="noopener"
+                                            class="flex items-center gap-1 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition no-underline"
+                                        >
+                                            <i class="pi pi-eye"></i>
+                                            Visualizar
+                                        </a>
+
+                                        <a
+                                            :href="route('vacinacoes.download', vacina.id)"
+                                            class="flex items-center gap-1 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-xl transition no-underline"
+                                        >
+                                            <i class="pi pi-download"></i>
+                                            Baixar
                                         </a>
                                     </div>
                                 </div>

@@ -2,7 +2,7 @@
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { router, useForm } from '@inertiajs/vue3'
 import axios from 'axios'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = defineProps({
     relatos: {
@@ -75,6 +75,7 @@ const normalizarResumo = (conteudo) => {
         periodo:
             resultado.periodo
             ?? 'Todo o histórico disponível',
+        gerado_em: resultado.gerado_em ?? null,
         secoes: Array.isArray(resultado.secoes)
             ? resultado.secoes
             : [],
@@ -94,6 +95,9 @@ const listaResumos = ref(
 )
 const resumo = ref(listaResumos.value[0]?.conteudo ?? null)
 const resumoAtualId = ref(listaResumos.value[0]?.id ?? null)
+const resumoAtualRegistro = computed(() => listaResumos.value.find(
+    (item) => item.id === resumoAtualId.value,
+) ?? null)
 const apagandoResumoId = ref(null)
 const carregandoResumo = ref(false)
 const mostrarOpcoesResumo = ref(false)
@@ -103,7 +107,7 @@ const secoesDisponiveis = [
     {
         id: 'dados_pessoais',
         titulo: 'Dados pessoais',
-        descricao: 'Nome e e-mail cadastrados.',
+        descricao: 'Identificação, idade, tipo sanguíneo, medidas, alergias e informações clínicas declaradas.',
     },
     {
         id: 'relatos',
@@ -130,6 +134,11 @@ const secoesDisponiveis = [
         titulo: 'Histórico Clínico',
         descricao: 'Ocorrências e informações da trajetória de saúde.',
     },
+    {
+        id: 'pendencias',
+        titulo: 'Pendências e próximos cuidados',
+        descricao: 'Lembretes, próximas doses e prescrições próximas do vencimento.',
+    },
 ]
 
 const opcoesResumo = ref({
@@ -141,6 +150,7 @@ const opcoesResumo = ref({
         'receitas',
         'vacinas',
         'historico_clinico',
+        'pendencias',
     ],
     incluir_perguntas: true,
 })
@@ -485,12 +495,42 @@ const formatarData = (dataString) => {
                                     <p class="text-xs text-indigo-500 mt-1">
                                         {{ resumo.periodo }}
                                     </p>
+                                    <p v-if="resumo.gerado_em" class="text-[11px] text-indigo-400 mt-1">
+                                        Gerado em {{ resumo.gerado_em }}
+                                    </p>
                                 </div>
 
-                                <div class="flex items-center gap-2">
-                                    <i
-                                        class="pi pi-sparkles text-indigo-600 text-lg"
-                                    ></i>
+                                <div class="flex flex-wrap items-center justify-end gap-2">
+                                    <a
+                                        v-if="resumoAtualRegistro?.visualizar_url"
+                                        :href="resumoAtualRegistro.visualizar_url"
+                                        target="_blank"
+                                        rel="noopener"
+                                        class="rounded-xl border border-indigo-200 bg-white px-3 py-2 text-xs font-bold text-indigo-700 no-underline hover:bg-indigo-50"
+                                    >
+                                        <i class="pi pi-eye mr-1"></i>
+                                        Visualizar PDF
+                                    </a>
+
+                                    <a
+                                        v-if="resumoAtualRegistro?.download_url"
+                                        :href="resumoAtualRegistro.download_url"
+                                        class="rounded-xl bg-indigo-600 px-3 py-2 text-xs font-bold text-white no-underline hover:bg-indigo-700"
+                                    >
+                                        <i class="pi pi-download mr-1"></i>
+                                        Baixar PDF
+                                    </a>
+
+                                    <a
+                                        v-if="resumoAtualRegistro?.imprimir_url"
+                                        :href="resumoAtualRegistro.imprimir_url"
+                                        target="_blank"
+                                        rel="noopener"
+                                        class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 no-underline hover:bg-slate-50"
+                                    >
+                                        <i class="pi pi-print mr-1"></i>
+                                        Imprimir
+                                    </a>
 
                                     <button
                                         v-if="resumoAtualId"
@@ -652,6 +692,14 @@ const formatarData = (dataString) => {
                                             >
                                                 Abrir
                                             </button>
+
+                                            <a
+                                                :href="registro.download_url"
+                                                class="w-9 h-9 rounded-xl bg-white text-indigo-600 border border-indigo-100 cursor-pointer hover:bg-indigo-50 inline-flex items-center justify-center no-underline"
+                                                title="Baixar PDF"
+                                            >
+                                                <i class="pi pi-download"></i>
+                                            </a>
 
                                             <button
                                                 type="button"

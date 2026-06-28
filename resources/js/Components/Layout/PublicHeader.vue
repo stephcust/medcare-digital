@@ -1,21 +1,29 @@
 <script setup>
-/** @import { MenuItem } from '@/Assets/GlobalTypes'; */
-import { isMenuActive } from '@/Components/Layout/Functions';
-import LogoHorizontal from '@/Components/Logos/LogoHorizontal.vue';
 import { Link } from '@inertiajs/vue3';
 import Button from 'primevue/button';
 import Menubar from 'primevue/menubar';
 
-/** @type {MenuItem[]} */
 const topNavItems = [];
 </script>
 
 <template>
-    <nav class="text-white shadow-md bg-primary-800">
-        <Menubar :model="topNavItems"
-            class="min-h-[75px] max-h-[75px] text-white border-none rounded-none max-w-7xl mx-auto bg-primary-800">
+    <nav class="sticky top-0 z-50 border-b border-surface-200 bg-white/95 shadow-sm backdrop-blur">
+        <Menubar
+            :model="topNavItems"
+            class="mx-auto min-h-[76px] max-w-7xl rounded-none border-none bg-transparent px-4 sm:px-6 lg:px-8"
+        >
             <template #start>
-                <LogoHorizontal />
+                <Link :href="route('landingPage')" class="flex items-center gap-3" aria-label="PÃ¡gina inicial do MedCare Digital">
+                    <img
+    src="/images/logo-medcare-simbolo.png"
+    alt="Símbolo oficial da MedCare"
+    class="h-12 w-12 object-contain"
+/>
+                    <span class="leading-none">
+                        <span class="block text-xl font-extrabold tracking-tight text-surface-950">MedCare</span>
+                        <span class="mt-1 block text-[10px] font-bold uppercase tracking-[0.22em] text-primary-600">Digital</span>
+                    </span>
+                </Link>
             </template>
 
             <template #button>
@@ -26,42 +34,23 @@ const topNavItems = [];
                 <span></span>
             </template>
 
-            <template #item="{ item, props, hasSubmenu, root }">
-                <Link v-if="item.route" :href="route(item.route)" v-ripple
-                    :class="{ 'text-primary-500 font-semibold': isMenuActive(item) }"
-                    class="flex items-center rounded-[4px]" v-bind="props.action">
-                <span v-if="item.icon" class="mr-1" :class="item.icon" />
-                <span>{{ item.label }}</span>
-                <i v-if="hasSubmenu"
-                    :class="['pi pi-angle-down', { 'pi-angle-down ml-2': root, 'pi-angle-right ml-auto': !root }]"></i>
-                </Link>
-                <a v-else v-ripple :class="{ 'text-primary-500': isMenuActive(item) }"
-                    class="flex items-center rounded-[4px]" v-bind="props.action">
-                    <span v-if="item.icon" class="mr-1" :class="item.icon" />
-                    <span>{{ item.label }}</span>
-                    <i v-if="hasSubmenu"
-                        :class="['pi pi-angle-down', { 'pi-angle-down ml-2': root, 'pi-angle-right ml-auto': !root }]"></i>
-                </a>
-            </template>
-
             <template #end>
-                <div class="hidden space-x-6 sm:flex text-lg">
-                    <Link v-if="route().has('login')" :href="route('login')"
-                        class="transition-all align-text-top hover:text-primary">
-                    Entrar
+                <div class="hidden items-center gap-3 sm:flex">
+                    <Link v-if="route().has('login')" :href="route('login')">
+                        <Button label="Entrar" text class="!font-bold !text-surface-700 hover:!text-primary-700" />
                     </Link>
 
-                    <Link v-if="route().has('register')" :href="route('register')"
-                        class="transition-all hover:text-primary">
-                    Cadastrar
+                    <Link v-if="route().has('register')" :href="route('register')">
+                        <Button label="Criar conta" icon="pi pi-arrow-right" iconPos="right" class="!rounded-xl !px-5 !font-bold" />
                     </Link>
                 </div>
-                <div class="sm:hidden space-x-1">
+
+                <div class="flex items-center gap-1 sm:hidden">
                     <Link v-if="route().has('login')" :href="route('login')">
-                    <Button class="text-white hover:text-primary-700" v-tooltip.left="'Entrar'" icon="pi pi-sign-in" text />
+                        <Button icon="pi pi-sign-in" text rounded aria-label="Entrar" />
                     </Link>
                     <Link v-if="route().has('register')" :href="route('register')">
-                    <Button class="text-white hover:text-primary-700" v-tooltip.left="'Cadastrar'" icon="pi pi-pen-to-square" text />
+                        <Button icon="pi pi-user-plus" rounded aria-label="Criar conta" />
                     </Link>
                 </div>
             </template>

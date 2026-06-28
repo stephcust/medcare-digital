@@ -30,6 +30,7 @@ class Lembrete extends Model
         'dias_semana',
         'ativo',
         'enviado_em',
+        'origem',
     ];
 
     protected $casts = [
@@ -43,6 +44,13 @@ class Lembrete extends Model
         'data_fim' => 'datetime',
         'ativo' => 'boolean',
         'enviado_em' => 'datetime',
+    ];
+
+    protected $attributes = [
+        'tipo' => 'outro',
+        'status' => 'pendente',
+        'ativo' => true,
+        'origem' => 'manual',
     ];
 
     public function user(): BelongsTo

@@ -20,24 +20,61 @@ const inicialNavItems = [
         route: 'dashboard',
     },
     {
-        label: 'Exames',
-        icon: PI.FILE_PDF,
+        label: 'Meu cuidado',
+        icon: 'pi pi-heart',
         items: [
             {
-                label: 'Meus Exames',
-                icon: PI.LIST,
+                label: 'Perfil de Saúde',
+                icon: 'pi pi-user-edit',
+                route: 'perfil-saude.index',
+            },
+            {
+                label: 'Jornada Inteligente',
+                icon: 'pi pi-sparkles',
+                route: 'jornada-inteligente.index',
+            },
+            {
+                label: 'Central de Pendências',
+                icon: 'pi pi-bell',
+                route: 'lembretes.index',
+            },
+        ],
+    },
+    {
+        label: 'Documentos de saúde',
+        icon: 'pi pi-folder-open',
+        items: [
+            {
+                label: 'Exames',
+                icon: PI.FILE_PDF,
                 route: 'exames.index',
             },
             {
-                label: 'Anexar Exame',
-                icon: PI.PLUS_CIRCLE,
-                route: 'exames.create',
+                label: 'Receitas',
+                icon: 'pi pi-file-edit',
+                route: 'menu.receitas',
             },
-            // {
-            //     label: 'CRUD Multi Page',
-            //     icon: PI.TABLE,
-            //     route: 'tarefa.index',
-            // },
+            {
+                label: 'Vacinas',
+                icon: 'pi pi-shield',
+                route: 'menu.vacinacoes',
+            },
+            {
+                label: 'Histórico Clínico',
+                icon: 'pi pi-history',
+                route: 'historico.ps',
+            },
+        ],
+    },
+    {
+        label: 'Assistente',
+        icon: 'pi pi-comments',
+        items: [
+            {
+                label: 'Simulador do WhatsApp',
+                icon: 'pi pi-whatsapp',
+                route: 'whatsapp-simulador.index',
+            },
         ],
     },
 ];

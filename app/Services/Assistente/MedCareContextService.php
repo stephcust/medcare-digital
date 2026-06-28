@@ -14,9 +14,12 @@ class MedCareContextService
             'Dados básicos do usuário:',
             "- Nome: {$user->name}",
             "- E-mail: {$user->email}",
-            '',
-            'Resumo dos dados encontrados no MedCare:',
         ];
+
+        $this->adicionarPerfilSaudeContexto($linhas, $user);
+
+        $linhas[] = '';
+        $linhas[] = 'Resumo dos dados encontrados no MedCare:';
 
         $this->adicionarRegistrosDoUsuario(
             $linhas,
@@ -180,7 +183,7 @@ class MedCareContextService
             return;
         }
 
-        $this->adicionarRegistrosDoUsuario(
+        $this->adicionarRegistrosDoPaciente(
             $linhas,
             'Histórico Clínico',
             $tabela,
@@ -202,7 +205,7 @@ class MedCareContextService
             return;
         }
 
-        $this->adicionarRegistrosDoUsuarioParaResumo(
+        $this->adicionarRegistrosDoPacienteParaResumo(
             $linhas,
             'Histórico Clínico',
             $tabela,
@@ -693,4 +696,72 @@ class MedCareContextService
 
         return implode('; ', $partes);
     }
+
+    private function adicionarPerfilSaudeContexto(
+        array &$linhas,
+        User $user
+    ): void {
+        if (!Schema::hasTable('perfis_pacientes')) {
+            return;
+        }
+
+        $perfil = DB::table('perfis_pacientes')
+            ->where('user_id', $user->id)
+            ->first();
+        $paciente = Schema::hasTable('pacientes')
+            ? DB::table('pacientes')->where('user_id', $user->id)->first()
+            : null;
+
+        if (!$perfil && !$paciente) {
+            return;
+        }
+
+        $linhas[] = '';
+        $linhas[] = 'Perfil de Saúde declarado pelo usuário:';
+
+        $campos = [
+            'data_nascimento' => $perfil->data_nascimento ?? null,
+            'genero' => $paciente->genero ?? null,
+            'telefone' => $paciente->telefone ?? null,
+            'tipo_sanguineo' => $paciente->tipo_sanguineo
+                ?? $perfil->tipo_sanguineo
+                ?? null,
+            'peso_kg' => $perfil->peso_kg ?? null,
+            'altura_cm' => $perfil->altura_cm ?? null,
+            'alergias' => $paciente->alergias_conhecidas
+                ?? $perfil->alergias_conhecidas
+                ?? null,
+            'condicoes_cronicas' => $perfil->condicoes_cronicas ?? null,
+            'medicamentos_continuos' => $perfil->medicamentos_continuos ?? null,
+            'cirurgias_anteriores' => $perfil->cirurgias_anteriores ?? null,
+            'dispositivos_implantes' => $perfil->dispositivos_implantes ?? null,
+            'observacoes_importantes' => $perfil->observacoes_importantes ?? null,
+        ];
+
+        foreach ($campos as $campo => $valor) {
+            if ($valor === null || $valor === '') {
+                continue;
+            }
+
+            if (is_string($valor)) {
+                $decodificado = json_decode($valor, true);
+                if (is_array($decodificado)) {
+                    $valor = implode('; ', $decodificado);
+                }
+            }
+
+            $linhas[] = '- ' . str_replace('_', ' ', $campo) . ': ' . $valor;
+        }
+
+        $contato = array_filter([
+            $perfil->contato_emergencia_nome ?? null,
+            $perfil->contato_emergencia_parentesco ?? null,
+            $perfil->contato_emergencia_telefone ?? null,
+        ]);
+
+        if ($contato) {
+            $linhas[] = '- contato de emergência: ' . implode(' - ', $contato);
+        }
+    }
+
 }

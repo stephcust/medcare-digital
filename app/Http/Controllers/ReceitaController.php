@@ -2,94 +2,67 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\Receita;
 use App\Models\Paciente;
-use App\Services\IA\GeminiService; // Injeção do serviço de IA oficial
+use App\Models\Receita;
+use App\Services\IA\GeminiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class ReceitaController extends Controller
 {
-    protected $geminiService;
-
-    // Construtor unificado para o consumo da IA
-    public function __construct(GeminiService $geminiService)
-    {
-        $this->geminiService = $geminiService;
-    }
+    public function __construct(
+        private GeminiService $geminiService
+    ) {}
 
     public function index(Paciente $paciente)
     {
-        if (Auth::user()->paciente->id !== $paciente->id) {
-            abort(403, 'Acesso não autorizado.');
-        }
+        $this->autorizarPaciente($paciente);
 
-        $receitas = Auth::user()->receitas()
-            ->orderBy('data_emissao', 'desc')
+        $receitas = Receita::query()
+            ->where('user_id', Auth::id())
+            ->orderByDesc('data_emissao')
             ->get();
 
         return Inertia::render('Receita/Index', [
             'paciente' => $paciente,
             'receitas' => $receitas,
-            'success' => session('success')
+            'success' => session('success'),
         ]);
     }
 
     public function create(Paciente $paciente)
     {
-        if (Auth::user()->paciente->id !== $paciente->id) {
-            abort(403, 'Acesso não autorizado.');
-        }
+        $this->autorizarPaciente($paciente);
 
         return Inertia::render('Receita/Create', [
-            'paciente' => $paciente
+            'paciente' => $paciente,
         ]);
     }
 
-    /**
-     * Endpoint assíncrono que processa a receita médica usando o GeminiService.
-     */
     public function analisarComIA(Request $request)
     {
         $request->validate([
-            'arquivo' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:10240']
+            'arquivo' => [
+                'required',
+                'file',
+                'mimes:jpg,jpeg,png,pdf',
+                'max:10240',
+            ],
         ]);
 
         try {
             $arquivo = $request->file('arquivo');
 
-            // Prompt focado na extração de dados médicos e estrutura de medicamentos
-            $promptInstrucao = "Você é o assistente inteligente do MedCare Digital especializado em triagem de receitas e prescrições médicas.
-            Analise o documento anexo e extraia com precisão absoluta as seguintes informações:
-            1. medico: O nome completo do médico emissor (ex: 'Dr. Carlos Eduardo').
-            2. especialidade: A especialidade médica identificada (ex: 'Cardiologia', 'Clínico Geral'). Se não achar, use 'Clínico Geral'.
-            3. data_emissao: A data de emissão do documento em formato 'YYYY-MM-DD'. Se não encontrar, use a data atual: " . now()->format('Y-m-d') . ".
-            4. data_validade: A data de validade informada em formato 'YYYY-MM-DD'. Caso não esteja explícita, calcule para 30 dias após a data de emissão.
-            5. medicamentos: Um array contendo os medicamentos prescritos. Cada item deve conter estritamente este formato interno de chaves:
-               - nome: Nome comercial ou genérico do fármaco (ex: 'Amoxicilina').
-               - dosagem: Concentração ou miligramas (ex: '500mg' ou '1 comprimido').
-               - frequencia: O intervalo de administração (ex: 'De 8 em 8 horas').
-               - duracao: Tempo total de tratamento (ex: '7 dias').
-
-            Retorne única e exclusivamente um objeto JSON válido contendo exatamente este formato estrutural:
-            {
-                \"medico\": \"string\",
-                \"especialidade\": \"string\",
-                \"data_emissao\": \"string\",
-                \"data_validade\": \"string\",
-                \"medicamentos\": [
-                    {
-                        \"nome\": \"string\",
-                        \"dosagem\": \"string\",
-                        \"frequencia\": \"string\",
-                        \"duracao\": \"string\"
-                    }
-                ]
-            }";
+            $promptInstrucao = "Você é o assistente inteligente do MedCare "
+                . "Digital especializado em triagem de receitas e prescrições "
+                . "médicas. Analise o documento e extraia: medico, "
+                . "especialidade, data_emissao, data_validade e medicamentos. "
+                . "Cada medicamento deve conter nome, dosagem, frequencia e "
+                . "duracao. Retorne somente JSON válido.";
 
             $jsonResposta = $this->geminiService->analisarDocumento(
                 $arquivo->getRealPath(),
@@ -100,7 +73,7 @@ class ReceitaController extends Controller
             if (!$jsonResposta) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'O assistente de IA não conseguiu ler os dados desta receita.'
+                    'message' => 'A IA não conseguiu ler esta receita.',
                 ], 422);
             }
 
@@ -109,81 +82,195 @@ class ReceitaController extends Controller
             if (json_last_error() !== JSON_ERROR_NONE) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Erro de formatação estrutural na resposta interna da IA.'
+                    'message' => 'A IA retornou dados em formato inválido.',
                 ], 422);
             }
 
             return response()->json([
                 'success' => true,
-                'dados' => $dadosExtraidos
+                'dados' => $dadosExtraidos,
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            report($e);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Falha interna no processamento do documento: ' . $e->getMessage()
+                'message' => 'Falha ao processar o documento.',
             ], 422);
         }
     }
 
     public function store(Request $request, Paciente $paciente)
     {
-        if (Auth::user()->paciente->id !== $paciente->id) {
-            abort(403);
-        }
+        $this->autorizarPaciente($paciente);
 
-        $request->validate([
+        $dados = $request->validate([
             'modo_cadastro' => ['required', 'string', 'in:manual,ia'],
-            'medico'        => ['required', 'string', 'max:255'],
+            'medico' => ['required', 'string', 'max:255'],
             'especialidade' => ['required', 'string', 'max:255'],
-            'data_emissao'  => ['required', 'date'],
+            'data_emissao' => ['required', 'date'],
             'data_validade' => ['required', 'date'],
-            'medicamentos'  => ['required', 'array', 'min:1'],
-            'arquivo'       => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:10240'],
+            'medicamentos' => ['required', 'array', 'min:1'],
+            'arquivo' => [
+                'required',
+                'file',
+                'mimes:jpg,jpeg,png,pdf',
+                'max:10240',
+            ],
         ]);
 
-        $caminho = null;
-        $urlBucket = null;
+        $arquivo = $request->file('arquivo');
+        $nomeArquivo = Str::uuid()
+            . '.'
+            . strtolower($arquivo->getClientOriginalExtension());
 
-        // Persistência segura do documento no Supabase Storage
-        if ($request->hasFile('arquivo')) {
-            $file = $request->file('arquivo');
-            $nomeArquivo = Str::uuid() . '.' . $file->getClientOriginalExtension();
-            $caminho = "usuario_" . auth()->id() . "/receitas/" . $nomeArquivo;
+        $caminho = 'usuario_'
+            . Auth::id()
+            . '/receitas/'
+            . $nomeArquivo;
 
-            Storage::disk('supabase')->put($caminho, file_get_contents($file));
-            $urlBucket = Storage::disk('supabase')->url($caminho);
+        $salvo = Storage::disk('supabase')->put(
+            $caminho,
+            file_get_contents($arquivo->getRealPath())
+        );
+
+        if (!$salvo) {
+            return back()->withErrors([
+                'arquivo' => 'Não foi possível salvar o PDF na nuvem.',
+            ]);
         }
 
-        Auth::user()->receitas()->create([
-            'paciente_id'   => $paciente->id,
-            'medico'        => $request->medico,
-            'especialidade' => $request->especialidade,
-            'data_emissao'  => $request->data_emissao,
-            'data_validade' => $request->data_validade,
-            'medicamentos'  => $request->medicamentos, // O Laravel irá converter o Array em JSON via casting do Model
-            'arquivo_path'  => $caminho,
-            'arquivo_url'   => $urlBucket,
-            'status'        => 'Ativa',
-            'origem'        => $request->modo_cadastro === 'ia' ? 'api' : 'manual',
-        ]);
+        try {
+            Receita::create([
+                'user_id' => Auth::id(),
+                'medico' => $dados['medico'],
+                'especialidade' => $dados['especialidade'],
+                'data_emissao' => $dados['data_emissao'],
+                'data_validade' => $dados['data_validade'],
+                'medicamentos' => $dados['medicamentos'],
+                'arquivo_path' => $caminho,
+                'arquivo_url' => null,
+                'status' => 'Ativa',
+            ]);
+        } catch (\Throwable $e) {
+            Storage::disk('supabase')->delete($caminho);
+            throw $e;
+        }
 
-        return redirect()->route('receitas.index', $paciente->id)
-            ->with('success', 'Prescrição médica cadastrada com sucesso e salva na nuvem!');
+        return redirect()
+            ->route('receitas.index', $paciente->id)
+            ->with(
+                'success',
+                'Prescrição cadastrada e salva na nuvem.'
+            );
+    }
+
+    public function visualizar(Receita $receita)
+    {
+        return $this->responderArquivo($receita, 'inline');
+    }
+
+    public function download(Receita $receita)
+    {
+        return $this->responderArquivo($receita, 'attachment');
     }
 
     public function destroy(Receita $receita)
     {
-        if (Auth::id() !== $receita->user_id) {
-            abort(403, 'Acesso não autorizado.');
-        }
+        $this->autorizarReceita($receita);
 
-        // Remove o documento anexado do Supabase se ele existir
-        if ($receita->arquivo_path && Storage::disk('supabase')->exists($receita->arquivo_path)) {
+        if (
+            $receita->arquivo_path
+            && Storage::disk('supabase')->exists($receita->arquivo_path)
+        ) {
             Storage::disk('supabase')->delete($receita->arquivo_path);
         }
 
         $receita->delete();
 
-        return redirect()->back()->with('success', 'Receita médica removida com sucesso.');
+        return redirect()
+            ->back()
+            ->with('success', 'Receita removida com sucesso.');
+    }
+
+    private function responderArquivo(
+        Receita $receita,
+        string $disposicao
+    ) {
+        $this->autorizarReceita($receita);
+
+        if (!$receita->arquivo_path) {
+            abort(404, 'Esta receita não possui um PDF anexado.');
+        }
+
+        try {
+            $extensao = strtolower(
+                pathinfo($receita->arquivo_path, PATHINFO_EXTENSION)
+            );
+
+            $nomeArquivo = 'prescricao-'
+                . Str::slug($receita->medico ?: 'medico')
+                . '-'
+                . ($receita->data_emissao
+                    ? $receita->data_emissao->format('Y-m-d')
+                    : 'sem-data')
+                . '.'
+                . ($extensao ?: 'pdf');
+
+            $mimeTypes = [
+                'pdf' => 'application/pdf',
+                'png' => 'image/png',
+                'jpg' => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+            ];
+
+            $contentType = $mimeTypes[$extensao]
+                ?? 'application/octet-stream';
+
+            $conteudo = Storage::disk('supabase')
+                ->get($receita->arquivo_path);
+
+            if ($conteudo === '') {
+                throw new \RuntimeException(
+                    'O arquivo da receita foi retornado vazio.'
+                );
+            }
+
+            return response($conteudo, 200, [
+                'Content-Type' => $contentType,
+                'Content-Disposition' => $disposicao
+                    . '; filename="' . $nomeArquivo . '"',
+                'X-Content-Type-Options' => 'nosniff',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error(
+                'Erro ao recuperar receita do Supabase: '
+                . $e->getMessage()
+            );
+
+            abort(
+                404,
+                'Não foi possível recuperar o PDF da receita.'
+            );
+        }
+    }
+
+    private function autorizarPaciente(Paciente $paciente): void
+    {
+        $pacienteDoUsuario = Auth::user()?->paciente;
+
+        if (
+            !$pacienteDoUsuario
+            || $pacienteDoUsuario->id !== $paciente->id
+        ) {
+            abort(403, 'Acesso não autorizado.');
+        }
+    }
+
+    private function autorizarReceita(Receita $receita): void
+    {
+        if ((int) $receita->user_id !== (int) Auth::id()) {
+            abort(403, 'Acesso não autorizado.');
+        }
     }
 }

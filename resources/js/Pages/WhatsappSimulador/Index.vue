@@ -1,6 +1,6 @@
 <script setup>
 import { nextTick, ref, watch } from 'vue'
-import { Link, useForm } from '@inertiajs/vue3'
+import { Link, router, useForm } from '@inertiajs/vue3'
 
 const props = defineProps({
     historico: {
@@ -12,7 +12,7 @@ const props = defineProps({
 const mensagemInicial = {
     id: 'boas-vindas',
     autor: 'assistente',
-    texto: 'Olá! 👋 Sou o assistente do MedCare Digital. Agora você também pode me enviar imagens ou documentos de exames, receitas e vacinas que eu extraio os dados para você!',
+    texto: 'Olá! 👋 Sou o assistente do MedCare Digital. Você pode enviar documentos, criar lembretes, relatar atendimentos e pedir exames, receitas, vacinas, documentos do histórico clínico ou um sumário clínico em PDF.',
     hora: '09:30'
 }
 
@@ -75,6 +75,68 @@ const obterHoraAtual = () => {
     })
 }
 
+const mensagemPersistida = (mensagem) => {
+    return Number.isInteger(Number(mensagem.id))
+}
+
+const excluirMensagem = (mensagem) => {
+    if (!mensagemPersistida(mensagem)) {
+        return
+    }
+
+    const confirmou = window.confirm(
+        'Deseja apagar somente esta mensagem? O documento médico continuará salvo no módulo correspondente.'
+    )
+
+    if (!confirmou) {
+        return
+    }
+
+    router.delete(
+        route('whatsapp-simulador.mensagens.destroy', mensagem.id),
+        {
+            preserveScroll: true
+        }
+    )
+}
+
+const limparConversa = () => {
+    const confirmou = window.confirm(
+        'Deseja apagar todo o histórico desta conversa? Os documentos médicos e os sumários clínicos continuarão salvos nos módulos correspondentes.'
+    )
+
+    if (!confirmou) {
+        return
+    }
+
+    router.delete(
+        route('whatsapp-simulador.conversa.destroy'),
+        {
+            preserveScroll: true
+        }
+    )
+}
+
+const descricaoDocumento = (msg) => {
+    if (msg.documento_tipo === 'receita') {
+        return 'Prescrição médica'
+    }
+
+    if (msg.documento_tipo === 'vacina') {
+        return 'Comprovante de vacinação'
+    }
+
+    if (msg.documento_tipo === 'historico') {
+        return 'Documento do atendimento clínico'
+    }
+
+    if (msg.documento_tipo === 'sumario') {
+        return 'Sumário de Preparação Clínica'
+    }
+
+    return 'Documento do exame'
+}
+
 const enviarMensagem = () => {
     if (!form.mensagem.trim() && !form.arquivo) {
         return
@@ -93,7 +155,6 @@ const enviarMensagem = () => {
             : anexo
     }
 
-    // Mostra a mensagem imediatamente, antes da resposta do servidor.
     mensagens.value.push({
         id: idTemporario,
         autor: 'usuario',
@@ -109,7 +170,6 @@ const enviarMensagem = () => {
         forceFormData: true,
 
         onStart: () => {
-            // Limpa o campo visualmente enquanto a mensagem é processada.
             form.mensagem = ''
             form.arquivo = null
             arquivoSelecionado.value = null
@@ -120,13 +180,10 @@ const enviarMensagem = () => {
         },
 
         onSuccess: () => {
-            // O histórico retornado pelo servidor substituirá a mensagem
-            // temporária pela versão definitiva salva no banco.
             form.clearErrors()
         },
 
         onError: () => {
-            // Remove a mensagem temporária caso o envio falhe.
             mensagens.value = mensagens.value.filter(
                 (mensagem) => mensagem.id !== idTemporario
             )
@@ -163,6 +220,15 @@ const enviarMensagem = () => {
                     <h1 class="font-bold text-lg leading-tight">MedCare Digital</h1>
                     <p class="text-xs text-green-100">Conta comercial • online</p>
                 </div>
+
+                <button
+                    type="button"
+                    class="rounded-lg border border-white/30 px-2 py-1 text-xs font-semibold hover:bg-white/10"
+                    title="Apagar toda a conversa"
+                    @click="limparConversa"
+                >
+                    Limpar
+                </button>
             </div>
 
             <div class="bg-[#efe7dd] h-[550px] flex flex-col">
@@ -177,12 +243,62 @@ const enviarMensagem = () => {
                         :class="msg.autor === 'usuario' ? 'justify-end' : 'justify-start'"
                     >
                         <div
-                            class="max-w-[85%] rounded-2xl px-3 py-2 shadow-sm whitespace-pre-line text-sm"
+                            class="relative max-w-[85%] rounded-2xl px-3 py-2 shadow-sm whitespace-pre-line text-sm"
                             :class="msg.autor === 'usuario'
                                 ? 'bg-[#dcf8c6] rounded-br-sm'
                                 : 'bg-white rounded-bl-sm'"
                         >
+                            <button
+                                v-if="mensagemPersistida(msg)"
+                                type="button"
+                                class="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs shadow border border-gray-200 hover:bg-red-50"
+                                title="Apagar esta mensagem"
+                                @click="excluirMensagem(msg)"
+                            >
+                                🗑
+                            </button>
+
                             <p>{{ msg.texto }}</p>
+
+                            <div
+                                v-if="msg.download_url"
+                                class="mt-3 rounded-xl border border-gray-200 bg-gray-50 p-3"
+                            >
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center text-xl">
+                                        📄
+                                    </div>
+
+                                    <div class="min-w-0 flex-1">
+                                        <p class="font-semibold text-gray-800 truncate">
+                                            {{ msg.arquivo_nome || 'documento.pdf' }}
+                                        </p>
+                                        <p class="text-xs text-gray-500">
+                                            {{ descricaoDocumento(msg) }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3 grid grid-cols-2 gap-2">
+                                    <a
+                                        v-if="msg.visualizar_url"
+                                        :href="msg.visualizar_url"
+                                        target="_blank"
+                                        rel="noopener"
+                                        class="inline-flex items-center justify-center rounded-lg border border-[#075E54] px-3 py-2 text-sm font-semibold text-[#075E54] no-underline hover:bg-green-50"
+                                    >
+                                        Visualizar
+                                    </a>
+
+                                    <a
+                                        :href="msg.download_url"
+                                        class="inline-flex items-center justify-center rounded-lg bg-[#075E54] px-3 py-2 text-sm font-semibold text-white no-underline hover:bg-[#064e46]"
+                                    >
+                                        Baixar
+                                    </a>
+                                </div>
+                            </div>
+
                             <div class="text-[10px] text-gray-500 text-right mt-1">
                                 {{ msg.hora }}
                             </div>

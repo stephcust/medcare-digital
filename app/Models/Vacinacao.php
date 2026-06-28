@@ -18,16 +18,17 @@ class Vacinacao extends Model
         'data_aplicacao',
         'data_proxima_dose',
         'observacoes',
-        'usuario_id'
+        'arquivo_path',
+        'arquivo_url',
+    ];
+
+    protected $casts = [
+        'data_aplicacao' => 'date',
+        'data_proxima_dose' => 'date',
     ];
 
     public function paciente(): BelongsTo
     {
         return $this->belongsTo(Paciente::class, 'paciente_id');
-    }
-
-    public function usuario(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'usuario_id');
     }
 }

@@ -250,6 +250,10 @@ class LembreteChatService
                 . 'Confira o intervalo, a duração e o horário informados.';
         }
 
+        foreach ($lembretes as $lembreteCriado) {
+            $lembreteCriado->update(['origem' => 'simulador']);
+        }
+
         Cache::forget($this->chaveContexto($user));
 
         $primeiro = $lembretes->first();
@@ -278,6 +282,7 @@ class LembreteChatService
             'status' => 'pendente',
             'recorrente' => false,
             'ativo' => true,
+            'origem' => 'simulador',
         ]);
 
         Cache::forget($this->chaveContexto($user));
@@ -672,8 +677,16 @@ class LembreteChatService
             return 'exame';
         }
 
-        if (Str::contains($mensagem, ['vacina', 'vacinacao'])) {
+        if (Str::contains($mensagem, ['vacina', 'vacinacao', 'imunizacao'])) {
             return 'vacina';
+        }
+
+        if (Str::contains($mensagem, ['receita', 'prescricao', 'renovar receita'])) {
+            return 'prescricao';
+        }
+
+        if (Str::contains($mensagem, ['retorno', 'acompanhamento', 'reavaliacao'])) {
+            return 'acompanhamento';
         }
 
         return 'outro';
@@ -686,6 +699,8 @@ class LembreteChatService
             'consulta' => 'Consulta',
             'exame' => 'Exame',
             'vacina' => 'Vacina',
+            'prescricao' => 'Prescrição',
+            'acompanhamento' => 'Acompanhamento',
             default => 'Outro',
         };
     }

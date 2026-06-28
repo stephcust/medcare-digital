@@ -8,6 +8,7 @@ use App\Models\Vacinacao;
 use App\Services\IA\GeminiService; // Importação do seu serviço de IA
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -24,9 +25,7 @@ class VacinacaoController extends Controller
 
     public function index(Paciente $paciente)
     {
-        if (Auth::user()->paciente->id !== $paciente->id) {
-            abort(403, 'Acesso não autorizado ao prontuário deste paciente.');
-        }
+        $this->autorizarPaciente($paciente);
 
         $vacinacoes = $paciente->vacinacoes()
             ->orderBy('data_aplicacao', 'desc')
@@ -34,7 +33,8 @@ class VacinacaoController extends Controller
 
         return Inertia::render('Vacinacoes/Index', [
             'paciente' => $paciente,
-            'vacinacoes' => $vacinacoes
+            'vacinacoes' => $vacinacoes,
+            'success' => session('success'),
         ]);
     }
 
@@ -107,7 +107,8 @@ class VacinacaoController extends Controller
 
     public function store(Request $request, Paciente $paciente)
     {
-        // Garante que o arquivo do comprovante é obrigatório para manter o histórico seguro
+        $this->autorizarPaciente($paciente);
+
         $request->validate([
             'modo_cadastro'     => ['required', 'string', 'in:manual,ia'],
             'nome_vacina'       => ['required', 'string', 'max:255'],
@@ -117,55 +118,207 @@ class VacinacaoController extends Controller
             'data_aplicacao'    => ['required', 'date'],
             'data_proxima_dose' => ['nullable', 'date'],
             'observacoes'       => ['nullable', 'string'],
-            'comprovante'       => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:10240'],
+            'comprovante'       => [
+                'nullable',
+                'file',
+                'mimes:jpg,jpeg,png,pdf',
+                'max:10240',
+            ],
         ], [
-            // 'comprovante.required' => 'O arquivo do comprovante de vacinação é obrigatório.',
             'nome_vacina.required' => 'O nome da vacina é obrigatório.',
-            'data_aplicacao.required' => 'A data de aplicação é obrigatória.'
+            'data_aplicacao.required' => 'A data de aplicação é obrigatória.',
         ]);
 
         $caminho = null;
-        $urlBucket = null;
 
-        if ($request->hasFile('comprovante')) {
-            $arquivo = $request->file('comprovante');
-            $nomeArquivo = Str::uuid() . '.' . $arquivo->getClientOriginalExtension();
-            $caminho = "usuario_" . auth()->id() . "/vacinas/" . $nomeArquivo;
+        try {
+            if ($request->hasFile('comprovante')) {
+                $arquivo = $request->file('comprovante');
+                $extensao = strtolower(
+                    $arquivo->getClientOriginalExtension() ?: 'pdf'
+                );
+                $nomeArquivo = Str::uuid() . '.' . $extensao;
+                $caminho = "usuario_" . Auth::id()
+                    . "/vacinas/" . $nomeArquivo;
 
-            // Upload persistente para o Supabase Storage
-            Storage::disk('supabase')->put($caminho, file_get_contents($arquivo));
-            $urlBucket = Storage::disk('supabase')->url($caminho);
+                $conteudo = file_get_contents($arquivo->getRealPath());
+
+                if ($conteudo === false) {
+                    throw new \RuntimeException(
+                        'Não foi possível ler o comprovante selecionado.'
+                    );
+                }
+
+                $salvo = Storage::disk('supabase')->put(
+                    $caminho,
+                    $conteudo
+                );
+
+                if (!$salvo) {
+                    throw new \RuntimeException(
+                        'Não foi possível salvar o comprovante na nuvem.'
+                    );
+                }
+            }
+
+            Vacinacao::create([
+                'paciente_id'       => $paciente->id,
+                'nome_vacina'       => $request->nome_vacina,
+                'fabricante'        => $request->fabricante
+                    ?: 'Não informado',
+                'lote'              => $request->lote ?: 'Não informado',
+                'numero_dose'       => $request->numero_dose,
+                'data_aplicacao'    => $request->data_aplicacao,
+                'data_proxima_dose' => $request->data_proxima_dose ?: null,
+                'observacoes'       => $request->observacoes,
+                'arquivo_path'      => $caminho,
+                'arquivo_url'       => null,
+            ]);
+        } catch (\Throwable $e) {
+            if ($caminho) {
+                try {
+                    Storage::disk('supabase')->delete($caminho);
+                } catch (\Throwable) {
+                    // Evita ocultar o erro principal.
+                }
+            }
+
+            Log::error(
+                'Falha ao cadastrar vacinação: ' . $e->getMessage()
+            );
+
+            return back()->withErrors([
+                'comprovante' => 'Não foi possível salvar o registro de '
+                    . 'vacinação. Tente novamente.',
+            ]);
         }
 
-        Vacinacao::create([
-            'paciente_id'       => $paciente->id,
-            'nome_vacina'       => $request->nome_vacina,
-            'fabricante'        => $request->fabricante ?? 'Não informado',
-            'lote'              => $request->lote ?? 'Não informado',
-            'numero_dose'       => $request->numero_dose,
-            'data_aplicacao'    => $request->data_aplicacao,
-            'data_proxima_dose' => $request->data_proxima_dose,
-            'observacoes'       => $request->observacoes,
-            'arquivo_path'      => $caminho,
-            'arquivo_url'       => $urlBucket,
-            'origem'            => $request->modo_cadastro === 'ia' ? 'api' : 'manual',
-        ]);
-
         return redirect()->route('vacinacoes.index', $paciente->id)
-            ->with('success', 'Registro de vacinação guardado com sucesso!');
+            ->with(
+                'success',
+                'Registro de vacinação guardado com sucesso!'
+            );
     }
 
     public function destroy(Vacinacao $vacinacao)
     {
+        $this->autorizarVacinacao($vacinacao);
         $pacienteId = $vacinacao->paciente_id;
 
-        if ($vacinacao->arquivo_path && Storage::disk('supabase')->exists($vacinacao->arquivo_path)) {
+        if (
+            $vacinacao->arquivo_path
+            && Storage::disk('supabase')->exists($vacinacao->arquivo_path)
+        ) {
             Storage::disk('supabase')->delete($vacinacao->arquivo_path);
         }
 
         $vacinacao->delete();
 
         return redirect()->route('vacinacoes.index', $pacienteId)
-            ->with('success', 'Registro de vacinação removido com sucesso.');
+            ->with(
+                'success',
+                'Registro de vacinação removido com sucesso.'
+            );
+    }
+
+    public function visualizar(Vacinacao $vacinacao)
+    {
+        return $this->responderArquivo($vacinacao, true);
+    }
+
+    public function download(Vacinacao $vacinacao)
+    {
+        return $this->responderArquivo($vacinacao, false);
+    }
+
+    private function responderArquivo(
+        Vacinacao $vacinacao,
+        bool $visualizar
+    ) {
+        $this->autorizarVacinacao($vacinacao);
+
+        if (!$vacinacao->arquivo_path) {
+            abort(404, 'Nenhum comprovante foi associado a esta vacinação.');
+        }
+
+        try {
+            $disco = Storage::disk('supabase');
+
+            if (!$disco->exists($vacinacao->arquivo_path)) {
+                abort(404, 'O comprovante não foi encontrado na nuvem.');
+            }
+
+            $conteudo = $disco->get($vacinacao->arquivo_path);
+            $extensao = strtolower(
+                pathinfo($vacinacao->arquivo_path, PATHINFO_EXTENSION)
+            );
+
+            $mimeTypes = [
+                'pdf' => 'application/pdf',
+                'png' => 'image/png',
+                'jpg' => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+            ];
+
+            $contentType = $mimeTypes[$extensao]
+                ?? 'application/octet-stream';
+
+            $data = $vacinacao->data_aplicacao
+                ? $vacinacao->data_aplicacao->format('Y-m-d')
+                : 'sem-data';
+
+            $nome = 'comprovante-'
+                . Str::slug($vacinacao->nome_vacina ?: 'vacina')
+                . '-'
+                . $data
+                . '.'
+                . ($extensao ?: 'pdf');
+
+            $disposicao = $visualizar ? 'inline' : 'attachment';
+
+            return response($conteudo, 200, [
+                'Content-Type' => $contentType,
+                'Content-Disposition' => $disposicao
+                    . '; filename="' . $nome . '"',
+                'X-Content-Type-Options' => 'nosniff',
+                'Cache-Control' => 'private, no-store, max-age=0',
+            ]);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error(
+                'Falha ao recuperar comprovante de vacinação: '
+                . $e->getMessage()
+            );
+
+            abort(
+                500,
+                'Não foi possível recuperar o comprovante de vacinação.'
+            );
+        }
+    }
+
+    private function autorizarPaciente(Paciente $paciente): void
+    {
+        $pacienteDoUsuario = Auth::user()?->paciente;
+
+        if (
+            !$pacienteDoUsuario
+            || (int) $pacienteDoUsuario->id !== (int) $paciente->id
+        ) {
+            abort(403, 'Acesso não autorizado.');
+        }
+    }
+
+    private function autorizarVacinacao(Vacinacao $vacinacao): void
+    {
+        $vacinacao->loadMissing('paciente');
+
+        if (
+            !$vacinacao->paciente
+            || (int) $vacinacao->paciente->user_id !== (int) Auth::id()
+        ) {
+            abort(403, 'Acesso não autorizado.');
+        }
     }
 }
