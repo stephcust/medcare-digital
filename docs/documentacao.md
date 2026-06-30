@@ -286,7 +286,7 @@ http://127.0.0.1:8000
 
 ---
 
-# 6. Organização do Projeto
+## 5.1. Organização do Projeto
 
 ## Front-end
 
@@ -341,7 +341,7 @@ Route::resource('exames', ExameController::class);
 
 ---
 
-# 7. Fluxo de Funcionamento
+## 5.2. Fluxo de Funcionamento
 
 ```text
 Usuário
@@ -380,7 +380,7 @@ Resumo em PDF
 
 ---
 
-# 8. Estrutura de Desenvolvimento
+## 5.3. Estrutura de Desenvolvimento
 
 Durante o desenvolvimento foram adotados os seguintes padrões:
 
@@ -408,7 +408,7 @@ Todo desenvolvimento ocorre na branch **develop**, sendo a **master** destinada 
 
 ---
 
-# 9. Considerações Finais
+# 6. Considerações Finais
 
 O MedCare Digital demonstra como uma arquitetura moderna baseada em Laravel, Vue e Inertia pode ser utilizada para desenvolver um sistema distribuído voltado à organização da jornada pessoal de saúde.
 
