@@ -1,4 +1,4 @@
-# 🩺 MedCare Digital
+# MedCare Digital
 
 Sistema distribuído para organização da jornada pessoal de saúde, desenvolvido com **Laravel 11**, **Vue 3** e **Inertia.js**.
 
